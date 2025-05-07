@@ -29,10 +29,15 @@ document.querySelectorAll(".primaryNavigation a").forEach((link) => {
   });
 });
 
-// Predefined admin credentials
+// Predefined admin and student credentials
 const adminCredentials = {
   email: "admin@spist.edu",
   password: "admin123",
+};
+
+const studentCredentials = {
+  email: "student@spist.edu",
+  password: "student123",
 };
 
 // login steps
@@ -48,7 +53,7 @@ function handleSubmit(event) {
     emailInput === adminCredentials.email &&
     passwordInput === adminCredentials.password
   ) {
-    // Admin login successful - store in session storage that user is logged in as admin
+    // Admin login successful
     sessionStorage.setItem("isLoggedIn", "true");
     sessionStorage.setItem("userRole", "admin");
 
@@ -56,23 +61,33 @@ function handleSubmit(event) {
     const form = event.target;
     form.classList.add("fade-out");
 
-    // Redirect to admin dashboard (we'll create this file)
+    // Redirect to admin dashboard
     setTimeout(() => {
       window.location.href = "/admin-dashboard";
     }, 500);
-  } else {
-    // Regular user or invalid credentials - proceed with normal flow
-    // Show error for invalid credentials
-    alert(
-      "Invalid email or password. For admin access, use admin@spist.edu / admin123"
-    );
+  }
+  // Check if credentials match student credentials
+  else if (
+    emailInput === studentCredentials.email &&
+    passwordInput === studentCredentials.password
+  ) {
+    // Student login successful
+    sessionStorage.setItem("isLoggedIn", "true");
+    sessionStorage.setItem("userRole", "student");
 
-    // For demo purposes, we'll still allow proceeding to verification step
+    // Fade out the form
     const form = event.target;
     form.classList.add("fade-out");
+
+    // Redirect to student dashboard
     setTimeout(() => {
-      window.location.href = "/login-verification";
+      window.location.href = "/student-dashboard";
     }, 500);
+  } else {
+    // Invalid credentials
+    alert(
+      "Invalid email or password. Please try again with valid credentials."
+    );
   }
 }
 
