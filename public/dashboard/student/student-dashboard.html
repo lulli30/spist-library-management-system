@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/img/school-logo-large.png" />
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/css/student.css" />
+    <!-- Fallback styles in case common.css is missing -->
+    <style>
+      /* Basic reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Fix for any potential conflicts */
+      .modal-content,
+      .user-table th,
+      .user-table td {
+        color: inherit;
+      }
+
+      .user-table tbody tr td {
+        color: #333;
+      }
+
+      /* Add specific styling for table headers */
+      .user-table thead th {
+        color: #333;
+        font-weight: 600;
+        background-color: #f5f5f5;
+      }
+
+      /* Additional student dashboard styles */
+      .welcome-banner {
+        margin-bottom: 20px;
+        color: white;
+      }
+
+      .welcome-banner h2 {
+        font-size: 24px;
+        margin-bottom: 5px;
+      }
+
+      .welcome-banner p {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .stat-card .material-symbols-outlined {
+        font-size: 32px;
+        margin-bottom: 10px;
+      }
+
+      .stat-card h3 {
+        font-size: 20px;
+        margin-bottom: 5px;
+      }
+
+      .book-borrow-btn {
+        background-color: #44a347;
+        border: none;
+        border-radius: 20px;
+        color: white;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .book-borrow-btn:hover {
+        background-color: #357d38;
+      }
+
+      .book-return-btn {
+        background-color: #f44336;
+        border: none;
+        border-radius: 20px;
+        color: white;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .book-return-btn:hover {
+        background-color: #d32f2f;
+      }
+    </style>
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- Symbols -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+
+    <!-- JavaScript -->
+    <script src="/js/user.js" defer></script>
+    <script>
+      // Authentication check - redirect if not logged in as student
+      document.addEventListener("DOMContentLoaded", function () {
+        const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+        const userRole = sessionStorage.getItem("userRole");
+
+        // For demonstration, we'll set student role if not logged in
+        if (!isLoggedIn || !userRole) {
+          sessionStorage.setItem("isLoggedIn", "true");
+          sessionStorage.setItem("userRole", "student");
+          sessionStorage.setItem("userName", "Maria Garcia");
+          sessionStorage.setItem("userID", "STD-2023-001");
+        }
+
+        // Display user name from session storage
+        const userNameElement = document.getElementById("userName");
+        if (userNameElement) {
+          userNameElement.textContent =
+            sessionStorage.getItem("userName") || "Student";
+        }
+
+        // Display user name in heading
+        const userNameHeadingElement =
+          document.getElementById("userNameHeading");
+        if (userNameHeadingElement) {
+          userNameHeadingElement.textContent =
+            sessionStorage.getItem("userName") || "Student";
+        }
+
+        // Display user ID from session storage
+        const userIDElement = document.getElementById("userID");
+        if (userIDElement) {
+          userIDElement.textContent =
+            sessionStorage.getItem("userID") || "STD-0000-000";
+        }
+      });
+
+      // Function to show logout modal
+      function showLogoutModal() {
+        document.getElementById("logoutModal").style.display = "flex";
+      }
+
+      // Function to close logout modal
+      function closeLogoutModal() {
+        document.getElementById("logoutModal").style.display = "none";
+      }
+
+      // Function to logout
+      function logout() {
+        // Clear session storage
+        sessionStorage.removeItem("isLoggedIn");
+        sessionStorage.removeItem("userRole");
+        sessionStorage.removeItem("userName");
+        sessionStorage.removeItem("userID");
+
+        closeLogoutModal();
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1000);
+      }
+
+      // Function to show book borrow modal
+      function showBorrowModal() {
+        document.getElementById("modal-user").style.display = "flex";
+      }
+    </script>
+
+    <title>Student Dashboard - SPIST Library</title>
+  </head>
+
+  <body>
+    <div class="main-container">
+      <!-- Sidebar -->
+      <aside class="sidebar-container">
+        <div class="sidebar">
+          <div class="admin-profile">
+            <div class="pin">
+              <div class="pcontainer">
+                <span class="material-symbols-outlined">person</span>
+              </div>
+              <div class="usrnm">
+                <p id="userName">Maria Garcia</p>
+              </div>
+            </div>
+            <div class="pin">
+              <div class="emaildiv"></div>
+            </div>
+            <div class="white"></div>
+            <p id="userID">STD-2023-001</p>
+          </div>
+
+          <nav class="nav">
+            <ul>
+              <li class="active">
+                <a href="/student-dashboard">
+                  <span class="material-symbols-outlined">dashboard</span>
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="/student-books">
+                  <span class="material-symbols-outlined">book</span>
+                  Browse Books
+                </a>
+              </li>
+              <li>
+                <a href="/student-borrowed">
+                  <span class="material-symbols-outlined"
+                    >assignment_returned</span
+                  >
+                  Borrowed Books
+                </a>
+              </li>
+              <li>
+                <a href="/student-profile">
+                  <span class="material-symbols-outlined">person</span>
+                  My Profile
+                </a>
+              </li>
+              <li>
+                <a href="#" onclick="showLogoutModal()">
+                  <span class="material-symbols-outlined">logout</span>
+                  Logout
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="container">
+        <div class="maincontent">
+          <div class="welcome-banner">
+            <h2>Welcome, <span id="userNameHeading">Maria Garcia</span>!</h2>
+            <p>Here's your library overview</p>
+          </div>
+
+          <div class="spacecontainer">
+            <div class="spacerdiv"></div>
+          </div>
+
+          <!-- Dashboard Stats -->
+          <div class="dashboard-stats">
+            <div class="stat-card">
+              <span class="material-symbols-outlined">menu_book</span>
+              <h3>Available Books</h3>
+              <p>245</p>
+            </div>
+            <div class="stat-card">
+              <span class="material-symbols-outlined">assignment_returned</span>
+              <h3>Books Borrowed</h3>
+              <p>2</p>
+            </div>
+            <div class="stat-card">
+              <span class="material-symbols-outlined">event</span>
+              <h3>Due Soon</h3>
+              <p>1</p>
+            </div>
+          </div>
+
+          <!-- Currently Borrowed Books -->
+          <div class="section-heading">
+            <span class="material-symbols-outlined">assignment_returned</span>
+            <h3>Currently Borrowed Books</h3>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="user-table">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Author</th>
+                  <th>Borrowed Date</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Introduction to Programming</td>
+                  <td>John Smith</td>
+                  <td>Nov 10, 2023</td>
+                  <td>Dec 10, 2023</td>
+                  <td>Active</td>
+                  <td>
+                    <button class="book-return-btn" onclick="showBookuser()">
+                      Return
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Data Structures and Algorithms</td>
+                  <td>Jane Doe</td>
+                  <td>Nov 15, 2023</td>
+                  <td>Dec 15, 2023</td>
+                  <td>Active</td>
+                  <td>
+                    <button class="book-return-btn" onclick="showBookuser()">
+                      Return
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Recently Added Books -->
+          <div class="section-heading">
+            <span class="material-symbols-outlined">new_releases</span>
+            <h3>Recently Added Books</h3>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="user-table">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Author</th>
+                  <th>Category</th>
+                  <th>Added Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Advanced Mathematics</td>
+                  <td>Robert Johnson</td>
+                  <td>Mathematics</td>
+                  <td>Nov 20, 2023</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Web Development Fundamentals</td>
+                  <td>Sarah Wilson</td>
+                  <td>Computer Science</td>
+                  <td>Nov 22, 2023</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Introduction to Physics</td>
+                  <td>David Lee</td>
+                  <td>Physics</td>
+                  <td>Nov 25, 2023</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Borrow/Return Modal -->
+    <div id="modal-user" class="modal">
+      <div class="modal-content">
+        <h2>Confirm Book Action</h2>
+        <form>
+          <div class="form-group">
+            <label for="bookTitle">Book Title</label>
+            <input
+              type="text"
+              id="bookTitle"
+              value="Introduction to Programming"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="author">Author</label>
+            <input type="text" id="author" value="John Smith" readonly />
+          </div>
+          <div class="form-group">
+            <label for="actionDate">Action Date</label>
+            <input type="date" id="actionDate" value="2023-11-30" />
+          </div>
+          <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea id="notes" rows="3"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Confirm</button>
+            <button type="button" class="cancel-btn" onclick="closeModal()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal">
+      <div class="modal-content">
+        <h2>Confirm Logout</h2>
+        <p>Are you sure you want to log out?</p>
+        <div class="form-actions">
+          <button class="logout-confirm-btn" onclick="logout()">Logout</button>
+          <button class="cancel-btn" onclick="closeLogoutModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

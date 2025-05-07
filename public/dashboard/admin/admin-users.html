@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/img/school-logo-large.png" />
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+    <!-- Fallback styles in case common.css is missing -->
+    <style>
+      /* Basic reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Fix for any potential conflicts */
+      .modal-content,
+      .user-table th,
+      .user-table td {
+        color: inherit;
+      }
+
+      .user-table tbody tr td {
+        color: #333;
+      }
+    </style>
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- Symbols -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+
+    <!-- JavaScript -->
+    <script src="/js/admin.js" defer></script>
+    <script src="/js/user.js" defer></script>
+    <script>
+      // Authentication check - redirect if not logged in as admin
+      document.addEventListener("DOMContentLoaded", function () {
+        const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+        const userRole = sessionStorage.getItem("userRole");
+
+        if (isLoggedIn !== "true" || userRole !== "admin") {
+          alert("Please log in with admin credentials to access this page.");
+          window.location.href = "/login";
+        }
+      });
+    </script>
+
+    <title>User Management - SPIST Library</title>
+  </head>
+
+  <body>
+    <div class="main-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">
+          <img src="/img/school-logo-large.png" alt="SPIST Logo" />
+          <h3>SPIST Library</h3>
+        </div>
+
+        <nav class="nav">
+          <ul>
+            <li>
+              <a href="/admin-dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+              </a>
+            </li>
+            <li>
+              <a href="/admin-books">
+                <span class="material-symbols-outlined">book</span>
+                Books
+              </a>
+            </li>
+            <li class="active">
+              <a href="/admin-users">
+                <span class="material-symbols-outlined">group</span>
+                Users
+              </a>
+            </li>
+            <li>
+              <a href="/admin-admins">
+                <span class="material-symbols-outlined"
+                  >admin_panel_settings</span
+                >
+                Admins
+              </a>
+            </li>
+            <li>
+              <a href="#" onclick="showLogoutModal()">
+                <span class="material-symbols-outlined">logout</span>
+                Logout
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="container">
+        <div class="maincontent">
+          <div class="adminprofile">
+            <h2>User Management</h2>
+            <button class="add-admin" onclick="showModal()">
+              <span class="material-symbols-outlined">add</span>Add User
+            </button>
+          </div>
+
+          <div class="spacecontainer">
+            <div class="spacerdiv"></div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="user-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>Maria Garcia</td>
+                  <td>maria@example.com</td>
+                  <td>Student</td>
+                  <td>Active</td>
+                  <td>
+                    <button class="btn edit-btn" onclick="showModalEdit()">
+                      Edit
+                    </button>
+                    <button class="btn delete-btn" onclick="modalDelete()">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>Robert Johnson</td>
+                  <td>robert@example.com</td>
+                  <td>Faculty</td>
+                  <td>Active</td>
+                  <td>
+                    <button class="btn edit-btn" onclick="showModalEdit()">
+                      Edit
+                    </button>
+                    <button class="btn delete-btn" onclick="modalDelete()">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                <!-- Add more rows as needed -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="adminModal" class="modal">
+      <div class="modal-content">
+        <h2>Add New User</h2>
+        <form>
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required />
+          </div>
+          <div class="form-group">
+            <label for="role">Role</label>
+            <select id="role" class="form-control" required>
+              <option value="">Select a role</option>
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required />
+          </div>
+          <div class="form-group">
+            <label for="Cpassword">Confirm Password</label>
+            <input type="password" id="Cpassword" required />
+          </div>
+          <div class="form-group">
+            <input type="checkbox" id="showPassword" />
+            <label for="showPassword">Show Password</label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Add User</button>
+            <button type="button" class="cancel-btn" onclick="closeModal()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="adminEdit" class="modal">
+      <div class="modal-content">
+        <h2>Edit User</h2>
+        <form>
+          <div class="form-group">
+            <label for="nameEdit">Full Name</label>
+            <input type="text" id="nameEdit" value="Maria Garcia" required />
+          </div>
+          <div class="form-group">
+            <label for="emailEdit">Email</label>
+            <input
+              type="email"
+              id="emailEdit"
+              value="maria@example.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="roleEdit">Role</label>
+            <select id="roleEdit" class="form-control" required>
+              <option value="">Select a role</option>
+              <option value="student" selected>Student</option>
+              <option value="faculty">Faculty</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="passwordEdit">New Password</label>
+            <input type="password" id="passwordEdit" />
+          </div>
+          <div class="form-group">
+            <label for="CpasswordEdit">Confirm New Password</label>
+            <input type="password" id="CpasswordEdit" />
+          </div>
+          <div class="form-group">
+            <input type="checkbox" id="showPasswordEdit" />
+            <label for="showPasswordEdit">Show Password</label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Update User</button>
+            <button type="button" class="cancel-btn" onclick="closeModal()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="modalDelete" class="modal">
+      <div class="modal-content">
+        <h2>Confirm Deletion</h2>
+        <p>Are you sure you want to delete this user?</p>
+        <div class="form-actions">
+          <button class="delete-confirm-btn">Delete</button>
+          <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal">
+      <div class="modal-content">
+        <h2>Confirm Logout</h2>
+        <p>Are you sure you want to log out?</p>
+        <div class="form-actions">
+          <button class="logout-confirm-btn" onclick="logout()">Logout</button>
+          <button class="cancel-btn" onclick="closeLogoutModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

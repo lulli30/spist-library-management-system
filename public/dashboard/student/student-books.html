@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/img/school-logo-large.png" />
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/css/student.css" />
+    <!-- Fallback styles in case common.css is missing -->
+    <style>
+      /* Basic reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Fix for any potential conflicts */
+      .modal-content,
+      .user-table th,
+      .user-table td {
+        color: inherit;
+      }
+
+      .user-table th {
+        color: #333;
+        background-color: #f5f5f5;
+        padding: 12px;
+        text-align: left;
+        border-bottom: 2px solid #ddd;
+      }
+
+      .user-table tbody tr td {
+        color: #333;
+      }
+
+      /* Additional book browse styles */
+      .search-filter-bar {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        align-items: center;
+      }
+
+      .search-bar {
+        flex-grow: 1;
+        position: relative;
+      }
+
+      .search-bar input {
+        width: 100%;
+        padding: 10px 15px;
+        border-radius: 20px;
+        border: none;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      .search-bar input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .filter-dropdown select {
+        padding: 8px 15px;
+        border-radius: 20px;
+        border: none;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        appearance: none;
+        padding-right: 30px;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 12px;
+      }
+
+      .filter-dropdown select option {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .book-borrow-btn {
+        background-color: #44a347;
+        border: none;
+        border-radius: 20px;
+        color: white;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .book-borrow-btn:hover {
+        background-color: #357d38;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        gap: 10px;
+      }
+
+      .pagination button {
+        background-color: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 5px;
+        color: white;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .pagination button:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .pagination button.active {
+        background-color: rgba(255, 255, 255, 0.4);
+        font-weight: bold;
+      }
+    </style>
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- Symbols -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+
+    <!-- JavaScript -->
+    <script src="/js/user.js" defer></script>
+    <script>
+      // Authentication check - redirect if not logged in as student
+      document.addEventListener("DOMContentLoaded", function () {
+        const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+        const userRole = sessionStorage.getItem("userRole");
+
+        // For demonstration, we'll set student role if not logged in
+        if (!isLoggedIn || !userRole) {
+          sessionStorage.setItem("isLoggedIn", "true");
+          sessionStorage.setItem("userRole", "student");
+          sessionStorage.setItem("userName", "Maria Garcia");
+          sessionStorage.setItem("userID", "STD-2023-001");
+        }
+
+        // Display user name from session storage
+        const userNameElement = document.getElementById("userName");
+        if (userNameElement) {
+          userNameElement.textContent =
+            sessionStorage.getItem("userName") || "Student";
+        }
+
+        // Display user ID from session storage
+        const userIDElement = document.getElementById("userID");
+        if (userIDElement) {
+          userIDElement.textContent =
+            sessionStorage.getItem("userID") || "STD-0000-000";
+        }
+      });
+
+      // Function to show logout modal
+      function showLogoutModal() {
+        document.getElementById("logoutModal").style.display = "flex";
+      }
+
+      // Function to close logout modal
+      function closeLogoutModal() {
+        document.getElementById("logoutModal").style.display = "none";
+      }
+
+      // Function to logout
+      function logout() {
+        // Clear session storage
+        sessionStorage.removeItem("isLoggedIn");
+        sessionStorage.removeItem("userRole");
+        sessionStorage.removeItem("userName");
+        sessionStorage.removeItem("userID");
+
+        closeLogoutModal();
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1000);
+      }
+    </script>
+
+    <title>Browse Books - SPIST Library</title>
+  </head>
+
+  <body>
+    <div class="main-container">
+      <!-- Sidebar -->
+      <aside class="sidebar-container">
+        <div class="sidebar">
+          <div class="admin-profile">
+            <div class="pin">
+              <div class="pcontainer">
+                <span class="material-symbols-outlined">person</span>
+              </div>
+              <div class="usrnm">
+                <p id="userName">Maria Garcia</p>
+              </div>
+            </div>
+            <div class="pin">
+              <div class="emaildiv"></div>
+            </div>
+            <div class="white"></div>
+            <p id="userID">STD-2023-001</p>
+          </div>
+
+          <nav class="nav">
+            <ul>
+              <li>
+                <a href="/student-dashboard">
+                  <span class="material-symbols-outlined">dashboard</span>
+                  Dashboard
+                </a>
+              </li>
+              <li class="active">
+                <a href="/student-books">
+                  <span class="material-symbols-outlined">book</span>
+                  Browse Books
+                </a>
+              </li>
+              <li>
+                <a href="/student-borrowed">
+                  <span class="material-symbols-outlined"
+                    >assignment_returned</span
+                  >
+                  Borrowed Books
+                </a>
+              </li>
+              <li>
+                <a href="/student-profile">
+                  <span class="material-symbols-outlined">person</span>
+                  My Profile
+                </a>
+              </li>
+              <li>
+                <a href="#" onclick="showLogoutModal()">
+                  <span class="material-symbols-outlined">logout</span>
+                  Logout
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="container">
+        <div class="maincontent">
+          <div class="welcome-banner">
+            <h2>Browse Library Books</h2>
+            <p>Search and filter from our collection of books</p>
+          </div>
+
+          <div class="spacecontainer">
+            <div class="spacerdiv"></div>
+          </div>
+
+          <!-- Search and Filter -->
+          <div class="search-filter-bar">
+            <div class="search-bar">
+              <input
+                type="text"
+                placeholder="Search by book title, author, or keyword..."
+              />
+            </div>
+            <div class="filter-dropdown">
+              <select>
+                <option value="">All Categories</option>
+                <option value="computer_science">Computer Science</option>
+                <option value="mathematics">Mathematics</option>
+                <option value="physics">Physics</option>
+                <option value="chemistry">Chemistry</option>
+                <option value="biology">Biology</option>
+                <option value="literature">Literature</option>
+                <option value="history">History</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Books Table -->
+          <div class="table-wrapper">
+            <table class="user-table">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Author</th>
+                  <th>Category</th>
+                  <th>ISBN</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Introduction to Programming</td>
+                  <td>John Smith</td>
+                  <td>Computer Science</td>
+                  <td>978-1-2345-6789-0</td>
+                  <td>Borrowed</td>
+                  <td>
+                    <button class="book-borrow-btn" disabled>Borrowed</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Data Structures and Algorithms</td>
+                  <td>Jane Doe</td>
+                  <td>Computer Science</td>
+                  <td>978-1-2345-6789-1</td>
+                  <td>Borrowed</td>
+                  <td>
+                    <button class="book-borrow-btn" disabled>Borrowed</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Advanced Mathematics</td>
+                  <td>Robert Johnson</td>
+                  <td>Mathematics</td>
+                  <td>978-1-2345-6789-2</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Web Development Fundamentals</td>
+                  <td>Sarah Wilson</td>
+                  <td>Computer Science</td>
+                  <td>978-1-2345-6789-3</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Introduction to Physics</td>
+                  <td>David Lee</td>
+                  <td>Physics</td>
+                  <td>978-1-2345-6789-4</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Organic Chemistry</td>
+                  <td>Emily Chen</td>
+                  <td>Chemistry</td>
+                  <td>978-1-2345-6789-5</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>World History: A Comprehensive Guide</td>
+                  <td>Michael Brown</td>
+                  <td>History</td>
+                  <td>978-1-2345-6789-6</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Introduction to Biology</td>
+                  <td>Lisa Taylor</td>
+                  <td>Biology</td>
+                  <td>978-1-2345-6789-7</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Classic Literature Anthology</td>
+                  <td>James Wilson</td>
+                  <td>Literature</td>
+                  <td>978-1-2345-6789-8</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Database Management Systems</td>
+                  <td>Karen Martin</td>
+                  <td>Computer Science</td>
+                  <td>978-1-2345-6789-9</td>
+                  <td>Available</td>
+                  <td>
+                    <button class="book-borrow-btn" onclick="showBookuser()">
+                      Borrow
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination">
+            <button>&laquo;</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>&raquo;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Borrow Modal -->
+    <div id="modal-user" class="modal">
+      <div class="modal-content">
+        <h2>Borrow Book</h2>
+        <form>
+          <div class="form-group">
+            <label for="bookTitle">Book Title</label>
+            <input
+              type="text"
+              id="bookTitle"
+              value="Advanced Mathematics"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="author">Author</label>
+            <input type="text" id="author" value="Robert Johnson" readonly />
+          </div>
+          <div class="form-group">
+            <label for="borrowDate">Borrow Date</label>
+            <input type="date" id="borrowDate" value="2023-11-30" />
+          </div>
+          <div class="form-group">
+            <label for="returnDate">Expected Return Date</label>
+            <input type="date" id="returnDate" value="2023-12-30" />
+          </div>
+          <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea id="notes" rows="3"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Confirm Borrow</button>
+            <button type="button" class="cancel-btn" onclick="closeModal()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal">
+      <div class="modal-content">
+        <h2>Confirm Logout</h2>
+        <p>Are you sure you want to log out?</p>
+        <div class="form-actions">
+          <button class="logout-confirm-btn" onclick="logout()">Logout</button>
+          <button class="cancel-btn" onclick="closeLogoutModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

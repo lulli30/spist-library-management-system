@@ -1,0 +1,38 @@
+/* Vision page styles */
+body {
+  background: url(/img/schoolppp.png) no-repeat center center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+/* Content specific styles */
+.content {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+.content h1,
+.content h2 {
+  text-align: center;
+  position: relative;
+}
+
+.content h1:after,
+.content h2:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background-color: #4caf50;
+}
+
+.content p {
+  text-align: center;
+  margin: 1.5rem 0;
+  font-size: 1.2rem;
+  line-height: 1.8;
+}

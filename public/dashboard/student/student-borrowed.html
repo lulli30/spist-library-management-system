@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/img/school-logo-large.png" />
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/css/student.css" />
+    <!-- Fallback styles in case common.css is missing -->
+    <style>
+      /* Basic reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Additional borrowed books page styles */
+      .status-filter {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .status-filter button {
+        background-color: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 20px;
+        color: white;
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .status-filter button:hover,
+      .status-filter button.active {
+        background-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .status-filter button.active {
+        font-weight: bold;
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .status-active {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .status-overdue {
+        background-color: #f44336;
+        color: white;
+      }
+
+      .status-returned {
+        background-color: #2196f3;
+        color: white;
+      }
+
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        background-color: white;
+        border-radius: 15px;
+        color: #666;
+        text-align: center;
+      }
+
+      .empty-state .material-symbols-outlined {
+        font-size: 48px;
+        margin-bottom: 10px;
+        color: #ccc;
+      }
+
+      .empty-state h3 {
+        margin-bottom: 10px;
+        color: #333;
+      }
+
+      .empty-state p {
+        max-width: 400px;
+        margin-bottom: 20px;
+        color: #666;
+      }
+
+      .browse-books-btn {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .browse-books-btn:hover {
+        background-color: #388e3c;
+      }
+    </style>
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- Symbols -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+
+    <!-- JavaScript -->
+    <script src="/js/user.js" defer></script>
+    <script>
+      // Authentication check - redirect if not logged in as student
+      document.addEventListener("DOMContentLoaded", function () {
+        const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+        const userRole = sessionStorage.getItem("userRole");
+
+        // For demonstration, we'll set student role if not logged in
+        if (!isLoggedIn || !userRole) {
+          sessionStorage.setItem("isLoggedIn", "true");
+          sessionStorage.setItem("userRole", "student");
+          sessionStorage.setItem("userName", "Maria Garcia");
+          sessionStorage.setItem("userID", "STD-2023-001");
+        }
+
+        // Display user name from session storage
+        const userNameElement = document.getElementById("userName");
+        if (userNameElement) {
+          userNameElement.textContent =
+            sessionStorage.getItem("userName") || "Student";
+        }
+
+        // Display user ID from session storage
+        const userIDElement = document.getElementById("userID");
+        if (userIDElement) {
+          userIDElement.textContent =
+            sessionStorage.getItem("userID") || "STD-0000-000";
+        }
+
+        // Initialize filter buttons
+        const filterButtons = document.querySelectorAll(
+          ".status-filter button"
+        );
+        filterButtons.forEach((button) => {
+          button.addEventListener("click", function () {
+            // Remove active class from all buttons
+            filterButtons.forEach((btn) => btn.classList.remove("active"));
+            // Add active class to clicked button
+            this.classList.add("active");
+
+            // Show empty state if returned is selected
+            const tableWrapper = document.querySelector(".table-wrapper");
+            const emptyState = document.querySelector(".empty-state");
+
+            if (this.getAttribute("data-filter") === "returned") {
+              tableWrapper.style.display = "none";
+              emptyState.style.display = "flex";
+            } else {
+              tableWrapper.style.display = "block";
+              emptyState.style.display = "none";
+            }
+          });
+        });
+      });
+
+      // Function to show logout modal
+      function showLogoutModal() {
+        document.getElementById("logoutModal").style.display = "flex";
+      }
+
+      // Function to close logout modal
+      function closeLogoutModal() {
+        document.getElementById("logoutModal").style.display = "none";
+      }
+
+      // Function to logout
+      function logout() {
+        // Clear session storage
+        sessionStorage.removeItem("isLoggedIn");
+        sessionStorage.removeItem("userRole");
+        sessionStorage.removeItem("userName");
+        sessionStorage.removeItem("userID");
+
+        closeLogoutModal();
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1000);
+      }
+    </script>
+
+    <title>Borrowed Books - SPIST Library</title>
+  </head>
+
+  <body>
+    <div class="main-container">
+      <!-- Sidebar -->
+      <aside class="sidebar-container">
+        <div class="sidebar">
+          <div class="admin-profile">
+            <div class="pin">
+              <div class="pcontainer">
+                <span class="material-symbols-outlined">person</span>
+              </div>
+              <div class="usrnm">
+                <p id="userName">Maria Garcia</p>
+              </div>
+            </div>
+            <div class="pin">
+              <div class="emaildiv"></div>
+            </div>
+            <div class="white"></div>
+            <p id="userID">STD-2023-001</p>
+          </div>
+
+          <nav class="nav">
+            <ul>
+              <li>
+                <a href="/student-dashboard">
+                  <span class="material-symbols-outlined">dashboard</span>
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="/student-books">
+                  <span class="material-symbols-outlined">book</span>
+                  Browse Books
+                </a>
+              </li>
+              <li class="active">
+                <a href="/student-borrowed">
+                  <span class="material-symbols-outlined"
+                    >assignment_returned</span
+                  >
+                  Borrowed Books
+                </a>
+              </li>
+              <li>
+                <a href="/student-profile">
+                  <span class="material-symbols-outlined">person</span>
+                  My Profile
+                </a>
+              </li>
+              <li>
+                <a href="#" onclick="showLogoutModal()">
+                  <span class="material-symbols-outlined">logout</span>
+                  Logout
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="container">
+        <div class="maincontent">
+          <div class="welcome-banner">
+            <h2>Borrowed Books</h2>
+            <p>View and manage your borrowed books</p>
+          </div>
+
+          <div class="spacecontainer">
+            <div class="spacerdiv"></div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="status-filter">
+            <button class="active" data-filter="all">All Books</button>
+            <button data-filter="active">Active</button>
+            <button data-filter="overdue">Overdue</button>
+            <button data-filter="returned">Returned</button>
+          </div>
+
+          <!-- Borrowed Books Table -->
+          <div class="table-wrapper">
+            <table class="user-table">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Author</th>
+                  <th>Borrowed Date</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Introduction to Programming</td>
+                  <td>John Smith</td>
+                  <td>Nov 10, 2023</td>
+                  <td>Dec 10, 2023</td>
+                  <td><span class="status-pill status-active">Active</span></td>
+                  <td>
+                    <button class="book-return-btn" onclick="showBookuser()">
+                      Return
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Data Structures and Algorithms</td>
+                  <td>Jane Doe</td>
+                  <td>Nov 15, 2023</td>
+                  <td>Dec 5, 2023</td>
+                  <td>
+                    <span class="status-pill status-overdue">Overdue</span>
+                  </td>
+                  <td>
+                    <button class="book-return-btn" onclick="showBookuser()">
+                      Return
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty state for returned books -->
+          <div class="empty-state" style="display: none">
+            <span class="material-symbols-outlined">sentiment_satisfied</span>
+            <h3>No Returned Books Found</h3>
+            <p>
+              You haven't returned any books yet. Books that you return will
+              appear here.
+            </p>
+            <a href="/student-books" class="browse-books-btn">Browse Books</a>
+          </div>
+
+          <!-- Borrowing History -->
+          <div class="section-heading">
+            <span class="material-symbols-outlined">history</span>
+            <h3>Borrowing History</h3>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="user-table">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Author</th>
+                  <th>Borrowed Date</th>
+                  <th>Returned Date</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>The Art of Computer Programming</td>
+                  <td>Donald Knuth</td>
+                  <td>Oct 5, 2023</td>
+                  <td>Nov 3, 2023</td>
+                  <td>29 days</td>
+                </tr>
+                <tr>
+                  <td>Introduction to Algorithms</td>
+                  <td>Thomas H. Cormen</td>
+                  <td>Sept 12, 2023</td>
+                  <td>Oct 10, 2023</td>
+                  <td>28 days</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Return Modal -->
+    <div id="modal-user" class="modal">
+      <div class="modal-content">
+        <h2>Return Book</h2>
+        <form>
+          <div class="form-group">
+            <label for="bookTitle">Book Title</label>
+            <input
+              type="text"
+              id="bookTitle"
+              value="Introduction to Programming"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="author">Author</label>
+            <input type="text" id="author" value="John Smith" readonly />
+          </div>
+          <div class="form-group">
+            <label for="borrowDate">Borrowed Date</label>
+            <input type="text" id="borrowDate" value="Nov 10, 2023" readonly />
+          </div>
+          <div class="form-group">
+            <label for="returnDate">Return Date</label>
+            <input type="date" id="returnDate" value="2023-11-30" />
+          </div>
+          <div class="form-group">
+            <label for="condition">Book Condition</label>
+            <select id="condition" required>
+              <option value="excellent">Excellent</option>
+              <option value="good" selected>Good</option>
+              <option value="fair">Fair</option>
+              <option value="damaged">Damaged</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea
+              id="notes"
+              rows="3"
+              placeholder="Any additional information about the book condition..."
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Confirm Return</button>
+            <button type="button" class="cancel-btn" onclick="closeModal()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal">
+      <div class="modal-content">
+        <h2>Confirm Logout</h2>
+        <p>Are you sure you want to log out?</p>
+        <div class="form-actions">
+          <button class="logout-confirm-btn" onclick="logout()">Logout</button>
+          <button class="cancel-btn" onclick="closeLogoutModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
