@@ -29,7 +29,7 @@ document.querySelectorAll(".primaryNavigation a").forEach((link) => {
   });
 });
 
-// Predefined admin and student credentials
+// Predefined admin credentials (preserved)
 const adminCredentials = {
   email: "admin@spist.edu",
   password: "admin123",
@@ -40,54 +40,50 @@ const studentCredentials = {
   password: "student123",
 };
 
-// login steps
-function handleSubmit(event) {
+// Handle form submission
+async function handleSubmit(event) {
   event.preventDefault();
 
-  // Get input values
   const emailInput = document.getElementById("email").value;
   const passwordInput = document.getElementById("password").value;
 
-  // Check if credentials match admin credentials
-  if (
-    emailInput === adminCredentials.email &&
-    passwordInput === adminCredentials.password
-  ) {
-    // Admin login successful
-    sessionStorage.setItem("isLoggedIn", "true");
-    sessionStorage.setItem("userRole", "admin");
+  try {
+    const response = await fetch("/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: emailInput,
+        password: passwordInput,
+      }),
+    });
 
-    // Fade out the form
-    const form = event.target;
-    form.classList.add("fade-out");
+    const data = await response.json();
 
-    // Redirect to admin dashboard
-    setTimeout(() => {
-      window.location.href = "/admin-dashboard";
-    }, 500);
-  }
-  // Check if credentials match student credentials
-  else if (
-    emailInput === studentCredentials.email &&
-    passwordInput === studentCredentials.password
-  ) {
-    // Student login successful
-    sessionStorage.setItem("isLoggedIn", "true");
-    sessionStorage.setItem("userRole", "student");
+    if (data.success) {
+      // Store user info in session
+      sessionStorage.setItem("isLoggedIn", "true");
+      sessionStorage.setItem("userRole", data.userRole);
+      if (data.studentId) {
+        sessionStorage.setItem("studentId", data.studentId);
+      }
 
-    // Fade out the form
-    const form = event.target;
-    form.classList.add("fade-out");
+      // Fade out the form
+      const form = event.target;
+      form.classList.add("fade-out");
 
-    // Redirect to student dashboard
-    setTimeout(() => {
-      window.location.href = "/student-dashboard";
-    }, 500);
-  } else {
-    // Invalid credentials
-    alert(
-      "Invalid email or password. Please try again with valid credentials."
-    );
+      // Redirect based on user role
+      setTimeout(() => {
+        window.location.href =
+          data.userRole === "admin" ? "/admin-dashboard" : "/student-dashboard";
+      }, 500);
+    } else {
+      alert("Invalid email or password. Please try again.");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("An error occurred during login. Please try again.");
   }
 }
 
@@ -106,25 +102,17 @@ function redirectToLogin(event) {
   window.location.href = "/login";
 }
 
-// Function to toggle password visibility
-function setupPasswordToggle() {
-  const showPassword = document.getElementById("showPassword");
-  if (showPassword) {
-    showPassword.addEventListener("change", function () {
-      const passwordField = document.getElementById("password");
-      if (passwordField) {
-        if (this.checked) {
-          passwordField.type = "text";
-        } else {
-          passwordField.type = "password";
-        }
-      }
+// Show/hide password functionality
+document.addEventListener("DOMContentLoaded", () => {
+  const showPasswordCheckbox = document.getElementById("showPassword");
+  const passwordInput = document.getElementById("password");
+
+  if (showPasswordCheckbox && passwordInput) {
+    showPasswordCheckbox.addEventListener("change", () => {
+      passwordInput.type = showPasswordCheckbox.checked ? "text" : "password";
     });
   }
-}
-
-// Call the function when the DOM is loaded
-document.addEventListener("DOMContentLoaded", setupPasswordToggle);
+});
 
 function logout() {
   // Clear user data from session storage

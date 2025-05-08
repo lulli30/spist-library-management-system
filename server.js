@@ -1,7 +1,15 @@
 const express = require("express");
 const path = require("path");
-const app = express();
+const bodyParser = require("body-parser");
+const authRoutes = require("./src/routes/auth");
 const PORT = process.env.PORT || 3000;
+
+// Initialize Express app
+const app = express();
+
+// Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files from the public directory
 app.use(express.static("public"));
@@ -9,18 +17,21 @@ app.use(express.static("public"));
 // Serve HTML pages from src/pages
 app.use("/pages", express.static(path.join(__dirname, "src/pages")));
 
+// Routes
+app.use("/auth", authRoutes);
+
 // Main route - serve the home page
 app.get("/", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "src/pages/home.html"));
+  res.sendFile(path.join(__dirname, "src/pages/home.html"));
 });
 
 // Authentication routes
 app.get("/login", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "src/pages/login.html"));
+  res.sendFile(path.join(__dirname, "src/pages/login.html"));
 });
 
 app.get("/signup", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "src/pages/signup.html"));
+  res.sendFile(path.join(__dirname, "src/pages/signup.html"));
 });
 
 app.get("/login-verification", (req, res) => {
