@@ -68,6 +68,10 @@ async function handleSubmit(event) {
       if (data.studentId) {
         sessionStorage.setItem("studentId", data.studentId);
       }
+      if (data.adminId) {
+        sessionStorage.setItem("adminId", data.adminId);
+        sessionStorage.setItem("adminRole", data.role);
+      }
 
       // Fade out the form
       const form = event.target;

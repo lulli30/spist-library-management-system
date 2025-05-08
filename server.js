@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const authRoutes = require("./src/routes/auth");
+const adminRoutes = require("./src/routes/admin");
 const PORT = process.env.PORT || 3000;
 
 // Initialize Express app
@@ -19,6 +20,7 @@ app.use("/pages", express.static(path.join(__dirname, "src/pages")));
 
 // Routes
 app.use("/auth", authRoutes);
+app.use("/api", adminRoutes);
 
 // Main route - serve the home page
 app.get("/", (req, res) => {
