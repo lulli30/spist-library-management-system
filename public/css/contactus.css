@@ -7,33 +7,69 @@ body {
 
 /* Content specific styles */
 .content {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(76, 175, 80, 0.85);
+  color: white;
   padding: 2rem;
 }
 
+.content h1,
+.content h2 {
+  color: white;
+  position: relative;
+  padding-bottom: 0.5rem;
+  margin: 1.5rem 0;
+}
+
 .contact-info {
-  background-color: rgba(76, 175, 79, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 2rem;
 }
 
 .library-hours {
-  background-color: rgba(76, 175, 79, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 2rem;
 }
 
 .contact-form {
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.1);
   padding: 1.5rem;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .submit-btn {
-  background-color: #4caf50;
-  color: white;
+  background-color: white;
+  color: #4caf50;
   padding: 10px 20px;
   border: none;
   border-radius: 4px;
@@ -45,5 +81,24 @@ body {
 }
 
 .submit-btn:hover {
-  background-color: #3e8e41;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.social-links {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.social-links a {
+  color: white;
+  text-decoration: none;
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.social-links i {
+  margin-right: 10px;
+  width: 20px;
 }

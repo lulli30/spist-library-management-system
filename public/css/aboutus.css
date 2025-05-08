@@ -9,9 +9,12 @@ body {
 .content {
   position: relative;
   overflow: hidden;
+  background-color: rgba(76, 175, 80, 0.85);
+  color: white;
 }
 
-.content:before {
+/* Removing the blur effect since we're using solid background now */
+/* .content:before {
   content: "";
   position: absolute;
   top: -10px;
@@ -21,12 +24,27 @@ body {
   z-index: -1;
   background-color: rgba(255, 255, 255, 0.9);
   filter: blur(5px);
-}
+} */
 
 .content h1 {
   position: relative;
-  border-bottom: 2px solid #4caf50;
+  border-bottom: 2px solid white;
   padding-bottom: 0.5rem;
   display: inline-block;
   margin: 0 auto 1.5rem;
+  color: white;
+}
+
+/* Adding styles for h2 and paragraphs to match vision page */
+.content h2 {
+  color: white;
+  position: relative;
+  padding-bottom: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.content p {
+  color: white;
+  margin: 1.5rem 0;
+  line-height: 1.8;
 }
