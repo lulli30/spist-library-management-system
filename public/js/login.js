@@ -4,7 +4,7 @@ function login() {
 
   setTimeout(() => {
     window.location.href = "/login";
-  }, 500); // Match this duration with the CSS transition duration
+  }, 500);
 }
 
 function signup() {
@@ -13,10 +13,9 @@ function signup() {
 
   setTimeout(() => {
     window.location.href = "/signup";
-  }, 500); // Match this duration with the CSS transition duration
+  }, 500);
 }
 
-// Add event listeners to the navigation links
 document.querySelectorAll(".primaryNavigation a").forEach((link) => {
   link.addEventListener("click", function (event) {
     event.preventDefault();
@@ -25,22 +24,10 @@ document.querySelectorAll(".primaryNavigation a").forEach((link) => {
 
     setTimeout(() => {
       window.location.href = this.getAttribute("href");
-    }, 500); // Match this duration with the CSS transition duration
+    }, 500);
   });
 });
 
-// Predefined admin credentials (preserved)
-const adminCredentials = {
-  email: "admin@spist.edu",
-  password: "admin123",
-};
-
-const studentCredentials = {
-  email: "student@spist.edu",
-  password: "student123",
-};
-
-// Handle form submission
 async function handleSubmit(event) {
   event.preventDefault();
 
@@ -62,7 +49,6 @@ async function handleSubmit(event) {
     const data = await response.json();
 
     if (data.success) {
-      // Store user info in session
       sessionStorage.setItem("isLoggedIn", "true");
       sessionStorage.setItem("userRole", data.userRole);
       if (data.studentId) {
@@ -73,11 +59,9 @@ async function handleSubmit(event) {
         sessionStorage.setItem("adminRole", data.role);
       }
 
-      // Fade out the form
       const form = event.target;
       form.classList.add("fade-out");
 
-      // Redirect based on user role
       setTimeout(() => {
         window.location.href =
           data.userRole === "admin" ? "/admin-dashboard" : "/student-dashboard";
@@ -106,7 +90,6 @@ function redirectToLogin(event) {
   window.location.href = "/login";
 }
 
-// Show/hide password functionality
 document.addEventListener("DOMContentLoaded", () => {
   const showPasswordCheckbox = document.getElementById("showPassword");
   const passwordInput = document.getElementById("password");
@@ -119,11 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function logout() {
-  // Clear user data from session storage
   sessionStorage.removeItem("isLoggedIn");
   sessionStorage.removeItem("userRole");
   sessionStorage.removeItem("userName");
 
-  // Redirect to login page
   window.location.href = "/login";
 }

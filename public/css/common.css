@@ -56,6 +56,12 @@ body.fade-out {
   transform: scale(1.05);
 }
 
+.primaryNavigation a.active {
+  background-color: rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+  transform: scale(1.05);
+}
+
 /* Container layouts */
 .container {
   max-width: 1200px;

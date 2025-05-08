@@ -1,0 +1,65 @@
+/* Header styles */
+.primary-header {
+  position: relative;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0;
+  background-color: #4caf50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.primary-header .logo {
+  position: absolute;
+  left: 0;
+  top: -200px;
+  width: auto;
+  height: 450px;
+  object-fit: contain;
+  margin: 0;
+  padding: 0;
+}
+
+.primaryNavigation {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding-right: 2rem;
+}
+
+.primaryNavigation a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.primaryNavigation a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .primary-header {
+    flex-direction: column;
+    height: auto;
+    padding: 1rem;
+  }
+
+  .primary-header .logo {
+    position: static;
+    height: 100px;
+    margin-bottom: 1rem;
+  }
+
+  .primaryNavigation {
+    padding-right: 0;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
