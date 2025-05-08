@@ -1,57 +1,48 @@
-document.getElementById("showPassword").addEventListener("change", function () {
-  const passwordField = document.getElementById("password");
-  const confirmPasswordField = document.getElementById("Cpassword");
+document.addEventListener("DOMContentLoaded", initializePasswordToggles);
 
-  const type = this.checked ? "text" : "password";
+function initializePasswordToggles() {
+  setupPasswordToggle("showPassword", ["password", "Cpassword"]);
+  setupPasswordToggle("showPasswordEdit", ["passwordEdit", "CpasswordEdit"]);
+}
 
-  if (passwordField) passwordField.type = type;
-  if (confirmPasswordField) confirmPasswordField.type = type;
-});
+function setupPasswordToggle(toggleId, fieldIds) {
+  const toggle = document.getElementById(toggleId);
+  if (!toggle) return;
 
-document
-  .getElementById("showPasswordEdit")
-  .addEventListener("change", function () {
-    const passwordField = document.getElementById("passwordEdit");
-    const confirmPasswordField = document.getElementById("CpasswordEdit");
-
-    const type = this.checked ? "text" : "password";
-
-    if (passwordField) passwordField.type = type;
-    if (confirmPasswordField) confirmPasswordField.type = type;
+  toggle.addEventListener("change", () => {
+    const type = toggle.checked ? "text" : "password";
+    fieldIds.forEach((id) => {
+      const field = document.getElementById(id);
+      if (field) field.type = type;
+    });
   });
-
-function showModal() {
-  document.getElementById("adminModal").style.display = "flex";
 }
 
-function showModalEdit() {
-  document.getElementById("adminEdit").style.display = "flex";
+function showModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) modal.style.display = "flex";
 }
 
-function modalDelete() {
-  document.getElementById("modalDelete").style.display = "flex";
-}
+const showAdminModal = () => showModal("adminModal");
+const showAdminEditModal = () => showModal("adminEdit");
+const showDeleteModal = () => showModal("modalDelete");
+const showLogoutModal = () => showModal("logoutModal");
 
 function closeModal() {
-  document.getElementById("adminModal").style.display = "none";
-  document.getElementById("adminEdit").style.display = "none";
-  document.getElementById("modalDelete").style.display = "none";
-}
-
-function showLogoutModal() {
-  document.getElementById("logoutModal").style.display = "flex";
+  ["adminModal", "adminEdit", "modalDelete"].forEach((id) => {
+    const modal = document.getElementById(id);
+    if (modal) modal.style.display = "none";
+  });
 }
 
 function closeLogoutModal() {
-  document.getElementById("logoutModal").style.display = "none";
+  const modal = document.getElementById("logoutModal");
+  if (modal) modal.style.display = "none";
 }
 
 function logout() {
-  // Clear session storage (user data)
-  sessionStorage.removeItem("isLoggedIn");
-  sessionStorage.removeItem("userRole");
-  sessionStorage.removeItem("userName");
+  const sessionKeys = ["isLoggedIn", "userRole", "userName", "adminId"];
+  sessionKeys.forEach((key) => sessionStorage.removeItem(key));
 
-  // Redirect to login page with correct path
   window.location.href = "/login";
 }

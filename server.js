@@ -5,75 +5,88 @@ const authRoutes = require("./src/routes/auth");
 const adminRoutes = require("./src/routes/admin");
 const PORT = process.env.PORT || 3000;
 
+// Initialize Express app
 const app = express();
 
+// Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(express.static("public"));
+// API Routes
+app.use("/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
+// API Error Handler
+app.use("/api", (err, req, res, next) => {
+  console.error("API Error:", err);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+    error: err.message,
+  });
+});
+
+// Static Files
+app.use(express.static("public"));
 app.use("/pages", express.static(path.join(__dirname, "src/pages")));
 
-app.use("/auth", authRoutes);
-app.use("/api", adminRoutes);
+// Authentication Pages
+const authPages = {
+  "/": "home.html",
+  "/login": "login.html",
+  "/signup": "signup.html",
+  "/login-verification": "login-verification.html",
+};
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "src/pages/home.html"));
+Object.entries(authPages).forEach(([route, page]) => {
+  app.get(route, (req, res) => {
+    res.sendFile(path.join(__dirname, "src/pages", page));
+  });
 });
 
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "src/pages/login.html"));
+// Admin Dashboard Pages
+const adminPages = [
+  "admin",
+  "admin-dashboard",
+  "admin-books",
+  "admin-users",
+  "admin-admins",
+];
+
+adminPages.forEach((page) => {
+  app.get(`/${page}`, (req, res) => {
+    const destination = page === "admin" ? "admin-dashboard" : page;
+    res.redirect(`/dashboard/admin/${destination}.html`);
+  });
 });
 
-app.get("/signup", (req, res) => {
-  res.sendFile(path.join(__dirname, "src/pages/signup.html"));
+// Student Dashboard Pages
+const studentPages = [
+  "student",
+  "student-dashboard",
+  "student-books",
+  "student-borrowed",
+  "student-profile",
+];
+
+studentPages.forEach((page) => {
+  app.get(`/${page}`, (req, res) => {
+    const destination = page === "student" ? "student-dashboard" : page;
+    res.redirect(`/dashboard/student/${destination}.html`);
+  });
 });
 
-app.get("/login-verification", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "src/pages/login-verification.html"));
-});
-
-app.get("/admin", (req, res) => {
-  res.redirect("/dashboard/admin/admin-dashboard.html");
-});
-
-app.get("/admin-dashboard", (req, res) => {
-  res.redirect("/dashboard/admin/admin-dashboard.html");
-});
-
-app.get("/admin-books", (req, res) => {
-  res.redirect("/dashboard/admin/admin-books.html");
-});
-
-app.get("/admin-users", (req, res) => {
-  res.redirect("/dashboard/admin/admin-users.html");
-});
-
-app.get("/admin-admins", (req, res) => {
-  res.redirect("/dashboard/admin/admin-admins.html");
-});
-
-app.get("/student", (req, res) => {
-  res.redirect("/dashboard/student/student-dashboard.html");
-});
-
-app.get("/student-dashboard", (req, res) => {
-  res.redirect("/dashboard/student/student-dashboard.html");
-});
-
-app.get("/student-books", (req, res) => {
-  res.redirect("/dashboard/student/student-books.html");
-});
-
-app.get("/student-borrowed", (req, res) => {
-  res.redirect("/dashboard/student/student-borrowed.html");
-});
-
-app.get("/student-profile", (req, res) => {
-  res.redirect("/dashboard/student/student-profile.html");
-});
-
+// Catch-all Route Handler
 app.get("*", (req, res) => {
+  // Skip API routes
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({
+      success: false,
+      message: "API endpoint not found",
+    });
+  }
+
+  // Handle page requests
   const requestedPage = req.path.substring(1);
   const pagesPath = path.join(__dirname, "src/pages", requestedPage);
 
@@ -81,7 +94,6 @@ app.get("*", (req, res) => {
     if (require("fs").existsSync(pagesPath)) {
       return res.sendFile(pagesPath);
     }
-
     res.sendFile(path.resolve(__dirname, "src/pages/home.html"));
   } catch (err) {
     console.error(err);
@@ -89,6 +101,7 @@ app.get("*", (req, res) => {
   }
 });
 
+// Start Server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Open http://localhost:${PORT} in your browser`);

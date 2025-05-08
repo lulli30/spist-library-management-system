@@ -8,22 +8,491 @@
     <link rel="stylesheet" href="/css/admin.css" />
     <!-- Fallback styles in case common.css is missing -->
     <style>
-      /* Basic reset */
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
 
-      /* Fix for any potential conflicts */
-      .modal-content,
-      .user-table th,
-      .user-table td {
-        color: inherit;
+      body {
+        background: url("/img/schoolppp.png") no-repeat center center fixed;
+        background-size: cover;
+        min-height: 100vh;
+        position: relative;
       }
 
-      .user-table tbody tr td {
-        color: #333;
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(76, 175, 80, 0.1);
+        z-index: 0;
+      }
+
+      .main-container {
+        display: flex;
+        min-height: 100vh;
+        position: relative;
+        z-index: 1;
+        padding: 20px;
+      }
+
+      .sidebar {
+        background: linear-gradient(
+          135deg,
+          rgba(76, 175, 80, 0.95),
+          rgba(56, 142, 60, 0.95)
+        );
+        width: 220px;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        padding-top: 20px;
+        z-index: 100;
+        backdrop-filter: blur(5px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .container {
+        flex: 1;
+        margin-left: 240px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        max-width: 1400px;
+      }
+
+      .admin-header {
+        background: linear-gradient(
+          135deg,
+          rgba(76, 175, 80, 0.95),
+          rgba(56, 142, 60, 0.95)
+        );
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 90;
+        backdrop-filter: blur(5px);
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+
+      .admin-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .admin-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+      }
+
+      .admin-details h3 {
+        color: white;
+        margin-bottom: 5px;
+        font-size: 1em;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .admin-details p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.8em;
+        margin-bottom: 2px;
+      }
+
+      .admin-info .material-symbols-outlined {
+        font-size: 2.5em;
+      }
+
+      .user-info {
+        background: linear-gradient(
+          135deg,
+          rgba(76, 175, 80, 0.95),
+          rgba(56, 142, 60, 0.95)
+        );
+        color: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        backdrop-filter: blur(5px);
+      }
+
+      .user-info h2 {
+        margin-bottom: 5px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .user-email {
+        font-size: 0.9em;
+        opacity: 0.9;
+      }
+
+      .maincontent {
+        padding: 0;
+      }
+
+      .table-wrapper {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+      }
+
+      .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+      }
+
+      .user-table th,
+      .user-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+      }
+
+      .user-table th {
+        background-color: rgba(76, 175, 80, 0.1);
+        color: #1b5e20;
+        font-weight: 600;
+      }
+
+      .user-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .user-table tr:hover {
+        background-color: rgba(76, 175, 80, 0.05);
+      }
+
+      .logo {
+        padding: 15px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .logo img {
+        width: 35px;
+        height: 35px;
+      }
+
+      .nav {
+        margin-top: 15px;
+      }
+
+      .nav ul {
+        list-style: none;
+      }
+
+      .nav ul li {
+        margin-bottom: 3px;
+      }
+
+      .nav ul li a {
+        color: white;
+        text-decoration: none;
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0.9;
+        transition: all 0.3s ease;
+        font-size: 0.95em;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .nav ul li a:hover {
+        background: rgba(255, 255, 255, 0.15);
+        opacity: 1;
+        transform: translateX(5px);
+      }
+
+      .nav ul li.active a {
+        background: rgba(255, 255, 255, 0.2);
+        opacity: 1;
+        font-weight: 500;
+      }
+
+      .nav .material-symbols-outlined {
+        font-size: 20px;
+      }
+
+      .add-admin {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s ease;
+      }
+
+      .add-admin:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+
+      /* Add animations */
+      .table-wrapper {
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (min-width: 1600px) {
+        .container {
+          margin: 0 auto;
+          margin-left: 240px;
+        }
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .modal.show {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        position: relative;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-content h2 {
+        color: #1b5e20;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #2e7d32;
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e8f5e9;
+        border-radius: 8px;
+        font-size: 1rem;
+        color: #1b5e20;
+        background: #f5f5f5;
+        transition: all 0.3s ease;
+      }
+
+      .form-group input:hover {
+        border-color: #81c784;
+        background: #ffffff;
+      }
+
+      .form-group input:focus {
+        border-color: #4caf50;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
+        outline: none;
+      }
+
+      .form-group input::placeholder {
+        color: #9e9e9e;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+
+      .submit-btn,
+      .cancel-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        min-width: 120px;
+        text-align: center;
+      }
+
+      .submit-btn {
+        background: #4caf50;
+        color: white;
+        box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+      }
+
+      .submit-btn:hover {
+        background: #43a047;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+      }
+
+      .cancel-btn {
+        background: #ff5252;
+        color: white;
+        box-shadow: 0 2px 4px rgba(255, 82, 82, 0.2);
+      }
+
+      .cancel-btn:hover {
+        background: #ff1744;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255, 82, 82, 0.2);
+      }
+
+      .delete-confirm-btn {
+        background: #ff5252;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(255, 82, 82, 0.2);
+      }
+
+      .delete-confirm-btn:hover {
+        background: #ff1744;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255, 82, 82, 0.2);
+      }
+
+      /* Modal animations */
+      @keyframes modalFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Fix for modal backdrop */
+      body.modal-open {
+        overflow: hidden;
+      }
+
+      /* Dropdown Select Styles */
+      .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e8f5e9;
+        border-radius: 8px;
+        font-size: 1rem;
+        color: #1b5e20;
+        background: #f5f5f5;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        appearance: none; /* Remove default arrow */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%231b5e20' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px;
+      }
+
+      .form-group select:hover {
+        border-color: #81c784;
+        background-color: #ffffff;
+      }
+
+      .form-group select:focus {
+        border-color: #4caf50;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
+        outline: none;
+      }
+
+      /* Status colors */
+      .status-available {
+        color: #4caf50;
+        font-weight: 500;
+      }
+
+      .status-borrowed {
+        color: #ff5252;
+        font-weight: 500;
+      }
+
+      .status-borrowed small {
+        display: block;
+        font-size: 0.8em;
+        color: #666;
+        margin-top: 4px;
+      }
+
+      /* Disabled button styles */
+      .btn.delete-btn[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #ccc;
+      }
+
+      .btn.delete-btn[disabled]:hover {
+        background: #ccc;
+        transform: none;
       }
     </style>
 
@@ -40,20 +509,20 @@
     />
 
     <!-- JavaScript -->
-    <script src="/js/admin.js" defer></script>
-    <script src="/js/books.js" defer></script>
     <script>
-      // Authentication check - redirect if not logged in as admin
-      document.addEventListener("DOMContentLoaded", function () {
-        const isLoggedIn = sessionStorage.getItem("isLoggedIn");
-        const userRole = sessionStorage.getItem("userRole");
-
-        if (isLoggedIn !== "true" || userRole !== "admin") {
-          alert("Please log in with admin credentials to access this page.");
-          window.location.href = "/login";
-        }
-      });
+      // Prevent any errors from missing admin.js
+      window.addEventListener(
+        "error",
+        function (e) {
+          if (e.target.src && e.target.src.includes("admin.js")) {
+            console.warn("admin.js failed to load, but this is not critical");
+          }
+        },
+        true
+      );
     </script>
+    <script src="/js/books.js" defer></script>
+    <script src="/js/admin.js" defer></script>
 
     <title>Book Management - SPIST Library</title>
   </head>
@@ -107,8 +576,21 @@
 
       <!-- Main Content -->
       <div class="container">
+        <div class="admin-header">
+          <div class="admin-info">
+            <div class="admin-avatar">
+              <span id="adminInitial">A</span>
+            </div>
+            <div class="admin-details">
+              <h3 id="adminName">Admin User</h3>
+              <p id="adminEmail">admin@spist.edu</p>
+              <p id="adminRole">Super Admin</p>
+            </div>
+          </div>
+        </div>
+
         <div class="maincontent">
-          <div class="adminprofile">
+          <div class="user-info">
             <h2>Book Management</h2>
             <button class="add-admin" onclick="showModal()">
               <span class="material-symbols-outlined">add</span>Add Book
@@ -127,6 +609,8 @@
                   <th>Title</th>
                   <th>Author</th>
                   <th>Category</th>
+                  <th>ISBN</th>
+                  <th>Added Date</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -137,6 +621,8 @@
                   <td>Introduction to Programming</td>
                   <td>John Smith</td>
                   <td>Computer Science</td>
+                  <td>978-3-16-148410-0</td>
+                  <td>2024-03-15</td>
                   <td>Available</td>
                   <td>
                     <button class="btn edit-btn" onclick="showModalEdit()">
@@ -152,6 +638,8 @@
                   <td>Data Structures and Algorithms</td>
                   <td>Jane Doe</td>
                   <td>Computer Science</td>
+                  <td>978-3-16-148410-1</td>
+                  <td>2024-03-16</td>
                   <td>Borrowed</td>
                   <td>
                     <button class="btn edit-btn" onclick="showModalEdit()">
@@ -174,22 +662,22 @@
     <div id="adminModal" class="modal">
       <div class="modal-content">
         <h2>Add New Book</h2>
-        <form>
+        <form id="addBookForm" method="POST">
           <div class="form-group">
             <label for="title">Title</label>
-            <input type="text" id="title" required />
+            <input type="text" id="title" name="title" required />
           </div>
           <div class="form-group">
             <label for="author">Author</label>
-            <input type="text" id="author" required />
+            <input type="text" id="author" name="author" required />
           </div>
           <div class="form-group">
             <label for="category">Category</label>
-            <input type="text" id="category" required />
+            <input type="text" id="category" name="category" required />
           </div>
           <div class="form-group">
             <label for="isbn">ISBN</label>
-            <input type="text" id="isbn" required />
+            <input type="text" id="isbn" name="isbn" required />
           </div>
           <div class="form-actions">
             <button type="submit" class="submit-btn">Add Book</button>
@@ -205,37 +693,29 @@
     <div id="adminEdit" class="modal">
       <div class="modal-content">
         <h2>Edit Book</h2>
-        <form>
+        <form id="editBookForm">
           <div class="form-group">
             <label for="titleEdit">Title</label>
-            <input
-              type="text"
-              id="titleEdit"
-              value="Introduction to Programming"
-              required
-            />
+            <input type="text" id="titleEdit" name="title" required />
           </div>
           <div class="form-group">
             <label for="authorEdit">Author</label>
-            <input type="text" id="authorEdit" value="John Smith" required />
+            <input type="text" id="authorEdit" name="author" required />
           </div>
           <div class="form-group">
             <label for="categoryEdit">Category</label>
-            <input
-              type="text"
-              id="categoryEdit"
-              value="Computer Science"
-              required
-            />
+            <input type="text" id="categoryEdit" name="category" required />
           </div>
           <div class="form-group">
             <label for="isbnEdit">ISBN</label>
-            <input
-              type="text"
-              id="isbnEdit"
-              value="978-3-16-148410-0"
-              required
-            />
+            <input type="text" id="isbnEdit" name="isbn" required />
+          </div>
+          <div class="form-group">
+            <label for="statusEdit">Status</label>
+            <select id="statusEdit" name="status" required>
+              <option value="available">Available</option>
+              <option value="borrowed">Borrowed</option>
+            </select>
           </div>
           <div class="form-actions">
             <button type="submit" class="submit-btn">Update Book</button>
@@ -253,8 +733,10 @@
         <h2>Confirm Deletion</h2>
         <p>Are you sure you want to delete this book?</p>
         <div class="form-actions">
-          <button class="delete-confirm-btn">Delete</button>
-          <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+          <button type="button" class="delete-confirm-btn">Delete</button>
+          <button type="button" class="cancel-btn" onclick="closeModal()">
+            Cancel
+          </button>
         </div>
       </div>
     </div>
