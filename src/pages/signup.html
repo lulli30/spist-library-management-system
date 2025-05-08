@@ -7,19 +7,16 @@
     <link rel="stylesheet" href="/css/common.css" />
     <link rel="stylesheet" href="/css/login.css" />
 
-    <!-- Icons -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
 
-    <!-- Symbols -->
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
       rel="stylesheet"
     />
 
-    <!-- JavaScript -->
     <script src="/js/signup.js" defer></script>
 
     <title>Sign Up - SPIST Library</title>
@@ -44,6 +41,64 @@
             <div class="form-group">
               <label for="email">Email</label>
               <input type="email" id="email" name="email" required />
+            </div>
+
+            <div class="form-group">
+              <label for="studentId">Student ID</label>
+              <input
+                type="text"
+                id="student_id"
+                name="student_id"
+                required
+                pattern="STD-\d{4}-\d{3}"
+                placeholder="STD-2023-003"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="department">Department</label>
+              <select id="department" name="department" required>
+                <option value="">Select Department</option>
+                <option value="BSIT">
+                  Bachelor of Science in Information Technology
+                </option>
+                <option value="BSCS">
+                  Bachelor of Science in Computer Science
+                </option>
+                <option value="BSCE">
+                  Bachelor of Science in Civil Engineering
+                </option>
+                <option value="BSME">
+                  Bachelor of Science in Mechanical Engineering
+                </option>
+                <option value="BSEE">
+                  Bachelor of Science in Electrical Engineering
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="yearLevel">Year Level</label>
+              <select id="year_level" name="year_level" required>
+                <option value="">Select Year Level</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+                <option value="5">5th Year</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="contactNumber">Contact Number</label>
+              <input
+                type="tel"
+                id="contact_number"
+                name="contact_number"
+                required
+                pattern="[0-9]{11}"
+                placeholder="09XXXXXXXXX"
+              />
             </div>
 
             <div class="form-group">

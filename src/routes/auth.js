@@ -65,11 +65,21 @@ router.post("/login", async (req, res) => {
 
 // Signup route
 router.post("/signup", async (req, res) => {
-  const { fullname, email, password } = req.body;
+  const {
+    student_id,
+    fullname,
+    email,
+    password,
+    department,
+    year_level,
+    student_type,
+    contact_number,
+    status,
+  } = req.body;
 
   // Check if email already exists
-  const checkQuery = "SELECT * FROM students WHERE email = ?";
-  db.query(checkQuery, [email], async (err, results) => {
+  const checkQuery = "SELECT * FROM students WHERE email = ? OR student_id = ?";
+  db.query(checkQuery, [email, student_id], async (err, results) => {
     if (err) {
       return res
         .status(500)
@@ -77,29 +87,49 @@ router.post("/signup", async (req, res) => {
     }
 
     if (results.length > 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email already exists" });
+      return res.status(400).json({
+        success: false,
+        message:
+          results[0].email === email
+            ? "Email already exists"
+            : "Student ID already exists",
+      });
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new student
+    // Insert new student with all fields
     const insertQuery =
-      "INSERT INTO students (fullname, email, password) VALUES (?, ?, ?)";
-    db.query(insertQuery, [fullname, email, hashedPassword], (err, result) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Error creating account" });
-      }
+      "INSERT INTO students (student_id, fullname, email, password, department, year_level, student_type, contact_number, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-      res.json({
-        success: true,
-        message: "Account created successfully",
-      });
-    });
+    db.query(
+      insertQuery,
+      [
+        student_id,
+        fullname,
+        email,
+        hashedPassword,
+        department,
+        year_level,
+        student_type,
+        contact_number,
+        status,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Error creating account" });
+        }
+
+        res.json({
+          success: true,
+          message: "Account created successfully",
+        });
+      }
+    );
   });
 });
 
