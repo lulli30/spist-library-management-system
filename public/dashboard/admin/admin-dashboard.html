@@ -6,16 +6,14 @@
     <link rel="icon" type="image/png" href="/img/school-logo-large.png" />
     <link rel="stylesheet" href="/css/common.css" />
     <link rel="stylesheet" href="/css/admin.css" />
-    <!-- Fallback styles in case common.css is missing -->
+
     <style>
-      /* Basic reset */
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
 
-      /* Dashboard specific styles */
       .stats-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -132,25 +130,20 @@
       }
     </style>
 
-    <!-- Icons -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
 
-    <!-- Symbols -->
     <link
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
       rel="stylesheet"
     />
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- JavaScript -->
     <script src="/js/admin.js" defer></script>
     <script>
-      // Authentication check
       document.addEventListener("DOMContentLoaded", async function () {
         const isLoggedIn = sessionStorage.getItem("isLoggedIn");
         const userRole = sessionStorage.getItem("userRole");
@@ -163,28 +156,24 @@
         }
 
         try {
-          // Fetch current admin's information
           const adminResponse = await fetch(`/api/admin/${adminId}`);
           if (!adminResponse.ok) {
             throw new Error("Failed to fetch admin information");
           }
           const adminData = await adminResponse.json();
 
-          // Update admin information display
           document.getElementById("adminName").textContent = adminData.fullname;
           document.getElementById("adminEmail").textContent = adminData.email;
           document.getElementById("adminRole").textContent = adminData.role;
           document.getElementById("adminInitial").textContent =
             adminData.fullname.charAt(0).toUpperCase();
 
-          // Fetch dashboard statistics
           const statsResponse = await fetch("/api/dashboard/stats");
           if (!statsResponse.ok) {
             throw new Error("Failed to fetch dashboard statistics");
           }
           const statsData = await statsResponse.json();
 
-          // Update statistics cards
           document.getElementById("totalBooks").textContent =
             statsData.totalBooks || 0;
           document.getElementById("activeBorrowings").textContent =
@@ -194,9 +183,8 @@
           document.getElementById("overdueBooks").textContent =
             statsData.overdueBooks || 0;
 
-          // Update recent activities
           const activityList = document.getElementById("activityList");
-          activityList.innerHTML = ""; // Clear existing activities
+          activityList.innerHTML = "";
 
           statsData.recentActivities.forEach((activity) => {
             const timeAgo = getTimeAgo(new Date(activity.timestamp));
@@ -213,7 +201,6 @@
             activityList.appendChild(li);
           });
 
-          // Update charts
           updateCharts(statsData);
         } catch (error) {
           console.error("Error:", error);
@@ -258,7 +245,6 @@
       }
 
       function updateCharts(statsData) {
-        // Borrowing Trends Chart
         const borrowingLabels = statsData.borrowingTrends
           .map((item) => {
             const [year, month] = item.month.split("-");
@@ -296,7 +282,6 @@
           },
         });
 
-        // Popular Categories Chart
         const categoryLabels = statsData.popularCategories.map(
           (item) => item.category
         );
@@ -342,7 +327,6 @@
 
   <body>
     <div class="main-container">
-      <!-- Sidebar -->
       <aside class="sidebar">
         <div class="logo">
           <img src="/img/school-logo-large.png" alt="SPIST Logo" />
@@ -387,7 +371,6 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <div class="container">
         <div class="maincontent">
           <div class="adminprofile">
@@ -404,7 +387,6 @@
             <h2>Dashboard Overview</h2>
           </div>
 
-          <!-- Statistics Cards -->
           <div class="stats-container">
             <div class="stat-card">
               <h3>Total Books</h3>
@@ -424,7 +406,6 @@
             </div>
           </div>
 
-          <!-- Charts -->
           <div class="charts-container">
             <div class="chart-card">
               <canvas id="borrowingTrends"></canvas>
@@ -434,18 +415,14 @@
             </div>
           </div>
 
-          <!-- Recent Activity -->
           <div class="recent-activity">
             <h3>Recent Activity</h3>
-            <ul class="activity-list" id="activityList">
-              <!-- Activities will be populated dynamically -->
-            </ul>
+            <ul class="activity-list" id="activityList"></ul>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
       <div class="modal-content">
         <h2>Confirm Logout</h2>
