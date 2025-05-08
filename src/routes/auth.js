@@ -3,55 +3,62 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const db = require("../config/database");
 
-// Admin credentials (preserved)
-const adminCredentials = {
-  email: "admin@spist.edu",
-  password: "admin123",
-};
-
 // Login route
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  // Check for admin login first
-  if (
-    email === adminCredentials.email &&
-    password === adminCredentials.password
-  ) {
-    return res.json({
-      success: true,
-      userRole: "admin",
-    });
-  }
-
-  // Check student login
-  const query = "SELECT * FROM students WHERE email = ?";
-  db.query(query, [email], async (err, results) => {
+  // Check admin login
+  const adminQuery = "SELECT * FROM admins WHERE email = ?";
+  db.query(adminQuery, [email], async (err, results) => {
     if (err) {
       return res
         .status(500)
         .json({ success: false, message: "Database error" });
     }
 
-    if (results.length === 0) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid credentials" });
+    if (results.length > 0) {
+      const admin = results[0];
+      // For now, since sample data has plain text passwords, we'll do a direct comparison
+      // In production, you should use bcrypt.compare like with students
+      if (password === admin.password) {
+        return res.json({
+          success: true,
+          userRole: "admin",
+          adminId: admin.id,
+          role: admin.role,
+        });
+      }
     }
 
-    const student = results[0];
-    const passwordMatch = await bcrypt.compare(password, student.password);
+    // If admin login fails, check student login
+    const studentQuery = "SELECT * FROM students WHERE email = ?";
+    db.query(studentQuery, [email], async (err, results) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
+      }
 
-    if (!passwordMatch) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid credentials" });
-    }
+      if (results.length === 0) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Invalid credentials" });
+      }
 
-    res.json({
-      success: true,
-      userRole: "student",
-      studentId: student.id,
+      const student = results[0];
+      const passwordMatch = await bcrypt.compare(password, student.password);
+
+      if (!passwordMatch) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Invalid credentials" });
+      }
+
+      res.json({
+        success: true,
+        userRole: "student",
+        studentId: student.id,
+      });
     });
   });
 });
