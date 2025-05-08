@@ -12,16 +12,30 @@ html {
   height: 100%;
   width: 100%;
   font-family: "Roboto", Arial, sans-serif;
+  background-color: #f5f5f5;
 }
 
 /* Login container with background image */
 .login-container {
   background: url(/img/schoolppp.png) no-repeat center center;
   background-size: cover;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 20px;
+  position: relative;
+}
+
+.login-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
 }
 
 /* Login box */
@@ -30,51 +44,67 @@ html {
   backdrop-filter: blur(10px);
   border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  padding: 30px;
-  width: 400px;
+  padding: 25px;
+  width: 340px;
   max-width: 90%;
+  position: relative;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .logo-section {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .logo-section img {
-  height: 80px;
+  height: 60px;
   width: auto;
   display: block;
-  margin: 0 auto 10px;
+  margin: 0 auto 8px;
 }
 
 .logo-section h2 {
   color: #4caf50;
-  margin-top: 10px;
+  margin-top: 8px;
+  font-size: 20px;
 }
 
 .form-section h3 {
   color: #4caf50;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  font-size: 16px;
 }
 
 /* Form inputs */
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: #333;
+  font-size: 14px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 10px;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 /* Buttons */
@@ -83,53 +113,82 @@ html {
   background-color: #4caf50;
   color: white;
   font-weight: bold;
-  padding: 12px;
+  padding: 10px;
   border: none;
   border-radius: 4px;
-  margin-top: 20px;
+  margin-top: 15px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   transition: background-color 0.3s;
-}
-
-.login-btn:hover {
-  background-color: #3e8e41;
 }
 
 /* Additional options */
 .additional-options {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 15px;
 }
 
 .forgot-password {
   align-self: flex-end;
   color: #4caf50;
   text-decoration: none;
-  font-size: 14px;
-}
-
-.forgot-password:hover {
-  text-decoration: underline;
+  font-size: 12px;
 }
 
 .signup-option {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 8px;
   color: #666;
+  font-size: 12px;
 }
 
 .signup-option a {
   color: #4caf50;
   font-weight: bold;
   text-decoration: none;
-  margin-left: 5px;
+  margin-left: 4px;
 }
 
-.signup-option a:hover {
-  text-decoration: underline;
+/* Responsive Design */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 15px;
+  }
+
+  .login-box {
+    padding: 30px 20px;
+  }
+
+  .logo-section img {
+    height: 60px;
+  }
+
+  .logo-section h2 {
+    font-size: 20px;
+  }
+
+  .form-section h3 {
+    font-size: 18px;
+  }
+}
+
+/* Error states */
+.form-group.error input {
+  border-color: #ff3d3d;
+  background-color: #fff8f8;
+}
+
+.form-group.error label {
+  color: #ff3d3d;
+}
+
+.error-message {
+  color: #ff3d3d;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
 }
 
 /* Alternative login layout (from login2.css) */
@@ -255,4 +314,65 @@ html {
 
 .socials img:hover {
   transform: scale(1.2);
+}
+
+/* Back to Home Link */
+.login-container .back-to-home,
+.back-to-home {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #ffffff !important;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  padding: 10px 15px;
+  background-color: #4caf50;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.login-container .back-to-home:hover,
+.back-to-home:hover {
+  background-color: #3d8b40;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #ffffff !important;
+}
+
+.login-container .back-to-home i,
+.back-to-home i,
+.back-to-home span,
+.back-to-home a,
+.back-to-home * {
+  font-size: 18px;
+  margin-right: 5px;
+  color: #ffffff !important;
+}
+
+/* Make sure any text inside the button is white */
+.back-to-home .back-text,
+.login-container .back-to-home .back-text {
+  color: #ffffff !important;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Responsive adjustment for back to home */
+@media (max-width: 480px) {
+  .back-to-home {
+    top: 15px;
+    left: 15px;
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .back-to-home i {
+    font-size: 16px;
+  }
 }
