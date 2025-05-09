@@ -305,7 +305,6 @@
         }
       }
 
-      /* Add subtle animations */
       .stat-card,
       .chart-card,
       .recent-activity {
@@ -322,13 +321,9 @@
           transform: translateY(0);
         }
       }
-
-      /* Chart customization */
       canvas {
         border-radius: 8px;
       }
-
-      /* Add hover effects to interactive elements */
       .btn,
       button {
         transition: all 0.3s ease;
@@ -338,6 +333,71 @@
       button:hover {
         transform: translateY(-1px);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .activity-type {
+        font-weight: 600;
+        margin-right: 5px;
+      }
+
+      .activity-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .time {
+        font-size: 0.8em;
+        color: #666;
+      }
+
+      .chart-card {
+        height: 300px;
+        position: relative;
+      }
+
+      .activity-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 10px;
+      }
+
+      .activity-main {
+        flex: 1;
+        margin-right: 15px;
+      }
+
+      .activity-type {
+        font-weight: 600;
+        margin-right: 8px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      .activity-detail {
+        color: #333;
+        font-size: 0.95em;
+      }
+
+      .time {
+        font-size: 0.85em;
+        color: #666;
+        white-space: nowrap;
+      }
+
+      .activity-item {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        transition: background-color 0.2s ease;
+      }
+
+      .activity-item:hover {
+        background-color: rgba(76, 175, 80, 0.05);
+      }
+
+      .activity-item:last-child {
+        border-bottom: none;
       }
     </style>
 
@@ -379,11 +439,18 @@
           document.getElementById("adminInitial").textContent =
             adminData.fullname.charAt(0).toUpperCase();
 
+          await refreshActivities();
+
+          setInterval(updateAllTimestamps, 60000);
+
+          setInterval(refreshActivities, 300000);
+
           const statsResponse = await fetch("/api/admin/dashboard/stats");
           if (!statsResponse.ok) {
             throw new Error("Failed to fetch dashboard statistics");
           }
           const statsData = await statsResponse.json();
+          console.log("Received stats data:", statsData);
 
           document.getElementById("totalBooks").textContent =
             statsData.totalBooks || 0;
@@ -394,38 +461,25 @@
           document.getElementById("overdueBooks").textContent =
             statsData.overdueBooks || 0;
 
-          const activityList = document.getElementById("activityList");
-          activityList.innerHTML = "";
-
-          statsData.recentActivities.forEach((activity) => {
-            const timeAgo = getTimeAgo(new Date(activity.timestamp));
-            const li = document.createElement("li");
-            li.className = "activity-item";
-            li.innerHTML = `
-              <div class="activity-content">
-                <strong>${formatActivityType(activity.type)}:</strong> ${
-              activity.detail
-            }
-                <div class="time">${timeAgo}</div>
-              </div>
-            `;
-            activityList.appendChild(li);
-          });
-
           updateCharts(statsData);
         } catch (error) {
-          console.error("Error:", error);
+          console.error("Error fetching dashboard data:", error);
+          document.getElementById("activityList").innerHTML = `
+            <li class="activity-item">
+              <div class="activity-content">Error loading activities: ${error.message}</div>
+            </li>
+          `;
         }
       });
 
       function formatActivityType(type) {
         switch (type) {
           case "book_borrowed":
-            return "Book Borrowed";
+            return "Borrowed";
           case "book_returned":
-            return "Book Returned";
+            return "Returned";
           case "book_overdue":
-            return "Book Overdue";
+            return "Overdue";
           default:
             return type
               .split("_")
@@ -434,75 +488,182 @@
         }
       }
 
+      function getActivityColor(type) {
+        switch (type) {
+          case "book_borrowed":
+            return "#4CAF50";
+          case "book_returned":
+            return "#2196F3";
+          case "book_overdue":
+            return "#F44336";
+          default:
+            return "#757575";
+        }
+      }
+
       function getTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
 
-        let interval = seconds / 31536000;
-        if (interval > 1) return Math.floor(interval) + " years ago";
+        const intervals = {
+          year: 31536000,
+          month: 2592000,
+          week: 604800,
+          day: 86400,
+          hour: 3600,
+          minute: 60,
+          second: 1,
+        };
 
-        interval = seconds / 2592000;
-        if (interval > 1) return Math.floor(interval) + " months ago";
+        if (seconds < 60) {
+          return "just now";
+        }
 
-        interval = seconds / 86400;
-        if (interval > 1) return Math.floor(interval) + " days ago";
+        for (let [unit, secondsInUnit] of Object.entries(intervals)) {
+          const interval = Math.floor(seconds / secondsInUnit);
+          if (interval >= 1) {
+            return `${interval} ${unit}${interval > 1 ? "s" : ""} ago`;
+          }
+        }
+      }
 
-        interval = seconds / 3600;
-        if (interval > 1) return Math.floor(interval) + " hours ago";
+      function updateAllTimestamps() {
+        const timeElements = document.querySelectorAll(".time");
+        timeElements.forEach((timeElement) => {
+          const timestamp = new Date(
+            timeElement.getAttribute("data-timestamp")
+          );
+          timeElement.textContent = getTimeAgo(timestamp);
+        });
+      }
 
-        interval = seconds / 60;
-        if (interval > 1) return Math.floor(interval) + " minutes ago";
+      async function refreshActivities() {
+        try {
+          const statsResponse = await fetch("/api/admin/dashboard/stats");
+          if (!statsResponse.ok) {
+            throw new Error("Failed to fetch dashboard statistics");
+          }
+          const statsData = await statsResponse.json();
 
-        return Math.floor(seconds) + " seconds ago";
+          const activityList = document.getElementById("activityList");
+          activityList.innerHTML = "";
+
+          if (
+            statsData.recentActivities &&
+            statsData.recentActivities.length > 0
+          ) {
+            statsData.recentActivities.forEach((activity) => {
+              const timestamp = new Date(activity.timestamp);
+              const timeAgo = getTimeAgo(timestamp);
+              const li = document.createElement("li");
+              li.className = "activity-item";
+
+              li.innerHTML = `
+                <div class="activity-content">
+                  <div class="activity-main">
+                    <span class="activity-type" style="color: ${getActivityColor(
+                      activity.type
+                    )}">
+                      ${formatActivityType(activity.type)}
+                    </span>
+                    <span class="activity-detail">${activity.detail}</span>
+                  </div>
+                  <div class="time" data-timestamp="${timestamp.toISOString()}" title="${timestamp.toLocaleString()}">${timeAgo}</div>
+                </div>
+              `;
+              activityList.appendChild(li);
+            });
+          } else {
+            activityList.innerHTML =
+              '<li class="activity-item"><div class="activity-content">No recent activities</div></li>';
+          }
+        } catch (error) {
+          console.error("Error refreshing activities:", error);
+        }
       }
 
       function updateCharts(statsData) {
-        const borrowingLabels = statsData.borrowingTrends
-          .map((item) => {
+        if (statsData.borrowingTrends && statsData.borrowingTrends.length > 0) {
+          const borrowingLabels = statsData.borrowingTrends.map((item) => {
             const [year, month] = item.month.split("-");
             return new Date(year, month - 1).toLocaleString("default", {
               month: "short",
+              year: "numeric",
             });
-          })
-          .reverse();
+          });
 
-        const borrowingData = statsData.borrowingTrends
-          .map((item) => item.count)
-          .reverse();
+          const borrowingData = statsData.borrowingTrends.map(
+            (item) => item.count
+          );
 
-        new Chart(document.getElementById("borrowingTrends").getContext("2d"), {
-          type: "line",
-          data: {
-            labels: borrowingLabels,
-            datasets: [
-              {
-                label: "Books Borrowed",
-                data: borrowingData,
-                borderColor: "#2196F3",
-                tension: 0.1,
+          const borrowingCtx = document
+            .getElementById("borrowingTrends")
+            .getContext("2d");
+          new Chart(borrowingCtx, {
+            type: "line",
+            data: {
+              labels: borrowingLabels,
+              datasets: [
+                {
+                  label: "Books Borrowed",
+                  data: borrowingData,
+                  borderColor: "#2196F3",
+                  backgroundColor: "rgba(33, 150, 243, 0.1)",
+                  tension: 0.4,
+                  fill: true,
+                  pointRadius: 4,
+                  pointHoverRadius: 6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "Monthly Borrowing Trends",
+                  font: {
+                    size: 16,
+                    weight: "bold",
+                  },
+                },
+                legend: {
+                  display: true,
+                  position: "top",
+                },
               },
-            ],
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              title: {
-                display: true,
-                text: "Monthly Borrowing Trends",
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    stepSize: 1,
+                    precision: 0,
+                  },
+                },
               },
             },
-          },
-        });
+          });
+        } else {
+          document.getElementById("borrowingTrends").parentElement.innerHTML =
+            '<div style="text-align: center; padding: 20px;">No borrowing data available</div>';
+        }
 
-        const categoryLabels = statsData.popularCategories.map(
-          (item) => item.category
-        );
-        const categoryData = statsData.popularCategories.map(
-          (item) => item.count
-        );
+        if (
+          statsData.popularCategories &&
+          statsData.popularCategories.length > 0
+        ) {
+          const categoryLabels = statsData.popularCategories.map(
+            (item) => item.category
+          );
+          const categoryData = statsData.popularCategories.map(
+            (item) => item.count
+          );
 
-        new Chart(
-          document.getElementById("popularCategories").getContext("2d"),
-          {
+          const categoryCtx = document
+            .getElementById("popularCategories")
+            .getContext("2d");
+          new Chart(categoryCtx, {
             type: "doughnut",
             data: {
               labels: categoryLabels,
@@ -521,15 +682,29 @@
             },
             options: {
               responsive: true,
+              maintainAspectRatio: false,
               plugins: {
                 title: {
                   display: true,
                   text: "Most Popular Book Categories",
+                  font: {
+                    size: 16,
+                    weight: "bold",
+                  },
+                },
+                legend: {
+                  position: "bottom",
+                  labels: {
+                    padding: 20,
+                  },
                 },
               },
             },
-          }
-        );
+          });
+        } else {
+          document.getElementById("popularCategories").parentElement.innerHTML =
+            '<div style="text-align: center; padding: 20px;">No category data available</div>';
+        }
       }
     </script>
 

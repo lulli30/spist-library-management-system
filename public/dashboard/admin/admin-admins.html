@@ -409,7 +409,6 @@
     <!-- JavaScript -->
     <script src="/js/admin.js" defer></script>
     <script>
-      // Authentication check - redirect if not logged in as admin
       document.addEventListener("DOMContentLoaded", async function () {
         const isLoggedIn = sessionStorage.getItem("isLoggedIn");
         const userRole = sessionStorage.getItem("userRole");
@@ -421,6 +420,7 @@
         }
 
         try {
+          // Fetch current admin info
           const adminResponse = await fetch(`/api/admin/${adminId}`);
           if (!adminResponse.ok) {
             throw new Error("Failed to fetch admin information");
@@ -432,10 +432,249 @@
           document.getElementById("adminRole").textContent = adminData.role;
           document.getElementById("adminInitial").textContent =
             adminData.fullname.charAt(0).toUpperCase();
+
+          // Fetch all admins
+          await loadAdmins();
         } catch (error) {
           console.error("Error:", error);
         }
       });
+
+      async function loadAdmins() {
+        try {
+          const response = await fetch("/api/admin");
+          if (!response.ok) {
+            throw new Error("Failed to fetch admins");
+          }
+          const admins = await response.json();
+
+          const tbody = document.querySelector(".user-table tbody");
+          tbody.innerHTML = "";
+
+          admins.forEach((admin) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${admin.id}</td>
+              <td>${admin.fullname}</td>
+              <td>${admin.role}</td>
+              <td>${admin.email}</td>
+              <td>${new Date(admin.created_at).toLocaleDateString()}</td>
+              <td>
+                <button class="btn edit-btn" onclick="showModalEdit(${
+                  admin.id
+                })">Edit</button>
+                <button class="btn delete-btn" onclick="modalDelete(${
+                  admin.id
+                })">Delete</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (error) {
+          console.error("Error loading admins:", error);
+          alert("Failed to load admins");
+        }
+      }
+
+      function showModal() {
+        document.getElementById("adminModal").style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("adminModal").style.display = "none";
+        document.getElementById("adminEdit").style.display = "none";
+        document.getElementById("modalDelete").style.display = "none";
+      }
+
+      async function showModalEdit(adminId) {
+        try {
+          const response = await fetch(`/api/admin/${adminId}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch admin details");
+          }
+          const admin = await response.json();
+
+          document.getElementById("adminEdit").dataset.adminId = adminId;
+          document.getElementById("nameEdit").value = admin.fullname;
+          document.getElementById("emailEdit").value = admin.email;
+          document.getElementById("adminRoleEdit").value =
+            admin.role === "super_admin" ? "super" : "system";
+
+          document.getElementById("adminEdit").style.display = "flex";
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to load admin details");
+        }
+      }
+
+      function modalDelete(adminId) {
+        const modal = document.getElementById("modalDelete");
+        modal.dataset.adminId = adminId;
+        modal.style.display = "flex";
+      }
+
+      // Add new admin
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .querySelector("#adminModal form")
+          .addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("Cpassword").value;
+
+            if (password !== confirmPassword) {
+              alert("Passwords do not match");
+              return;
+            }
+
+            try {
+              const response = await fetch("/api/admin", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  fullname: document.getElementById("name").value,
+                  email: document.getElementById("email").value,
+                  password: password,
+                  role:
+                    document.getElementById("adminRole").value === "super"
+                      ? "super_admin"
+                      : "system_admin",
+                }),
+              });
+
+              const data = await response.json();
+              if (!response.ok) {
+                throw new Error(data.message || "Failed to create admin");
+              }
+
+              await loadAdmins();
+              closeModal();
+              this.reset();
+              alert("Admin created successfully");
+            } catch (error) {
+              console.error("Error:", error);
+              alert(error.message);
+            }
+          });
+
+        // Update admin
+        document
+          .querySelector("#adminEdit form")
+          .addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const adminId =
+              document.getElementById("adminEdit").dataset.adminId;
+            const password = document.getElementById("passwordEdit").value;
+            const confirmPassword =
+              document.getElementById("CpasswordEdit").value;
+
+            if (password && password !== confirmPassword) {
+              alert("Passwords do not match");
+              return;
+            }
+
+            try {
+              const data = {
+                fullname: document.getElementById("nameEdit").value,
+                email: document.getElementById("emailEdit").value,
+                role:
+                  document.getElementById("adminRoleEdit").value === "super"
+                    ? "super_admin"
+                    : "system_admin",
+              };
+
+              if (password) {
+                data.password = password;
+              }
+
+              const response = await fetch(`/api/admin/${adminId}`, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+              });
+
+              const responseData = await response.json();
+              if (!response.ok) {
+                throw new Error(
+                  responseData.message || "Failed to update admin"
+                );
+              }
+
+              await loadAdmins();
+              closeModal();
+              alert("Admin updated successfully");
+            } catch (error) {
+              console.error("Error:", error);
+              alert(error.message);
+            }
+          });
+
+        // Delete admin
+        document
+          .querySelector("#modalDelete .delete-confirm-btn")
+          .addEventListener("click", async function () {
+            const adminId =
+              document.getElementById("modalDelete").dataset.adminId;
+
+            try {
+              const response = await fetch(`/api/admin/${adminId}`, {
+                method: "DELETE",
+              });
+
+              const data = await response.json();
+              if (!response.ok) {
+                throw new Error(data.message || "Failed to delete admin");
+              }
+
+              await loadAdmins();
+              closeModal();
+              alert("Admin deleted successfully");
+            } catch (error) {
+              console.error("Error:", error);
+              alert(error.message);
+            }
+          });
+
+        // Show/hide password functionality
+        document
+          .getElementById("showPassword")
+          .addEventListener("change", function () {
+            const password = document.getElementById("password");
+            const confirmPassword = document.getElementById("Cpassword");
+            const type = this.checked ? "text" : "password";
+            password.type = type;
+            confirmPassword.type = type;
+          });
+
+        document
+          .getElementById("showPasswordEdit")
+          .addEventListener("change", function () {
+            const password = document.getElementById("passwordEdit");
+            const confirmPassword = document.getElementById("CpasswordEdit");
+            const type = this.checked ? "text" : "password";
+            password.type = type;
+            confirmPassword.type = type;
+          });
+      });
+
+      function showLogoutModal() {
+        document.getElementById("logoutModal").style.display = "flex";
+      }
+
+      function closeLogoutModal() {
+        document.getElementById("logoutModal").style.display = "none";
+      }
+
+      function logout() {
+        sessionStorage.clear();
+        window.location.href = "/login";
+      }
     </script>
 
     <title>Admin Management - SPIST Library</title>
@@ -519,45 +758,16 @@
             <table class="user-table">
               <thead>
                 <tr>
-                  <th>Admin id</th>
-                  <th>Admin name</th>
-                  <th>Admin permission</th>
-                  <th>Username</th>
-                  <th>School position</th>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Email</th>
+                  <th>Created At</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>ADM001</td>
-                  <td>Admin User</td>
-                  <td>Super Admin</td>
-                  <td>admin.user</td>
-                  <td>Library Head</td>
-                  <td>
-                    <button class="btn edit-btn" onclick="showModalEdit()">
-                      Edit
-                    </button>
-                    <button class="btn delete-btn" onclick="modalDelete()">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>ADM002</td>
-                  <td>Sarah Wilson</td>
-                  <td>System Admin</td>
-                  <td>sarah.wilson</td>
-                  <td>Librarian</td>
-                  <td>
-                    <button class="btn edit-btn" onclick="showModalEdit()">
-                      Edit
-                    </button>
-                    <button class="btn delete-btn" onclick="modalDelete()">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+                <!-- Table body will be populated dynamically -->
               </tbody>
             </table>
           </div>
@@ -569,7 +779,7 @@
     <div id="adminModal" class="modal">
       <div class="modal-content">
         <h2>Add New Admin</h2>
-        <form>
+        <form id="addAdminForm">
           <div class="form-group">
             <label for="name">Name</label>
             <input type="text" id="name" required />
@@ -584,7 +794,6 @@
               <option value="">Select a role</option>
               <option value="super">Super Admin</option>
               <option value="system">System Admin</option>
-              <option value="content">Content Admin</option>
             </select>
           </div>
           <div class="form-group">
@@ -613,31 +822,27 @@
     <div id="adminEdit" class="modal">
       <div class="modal-content">
         <h2>Edit Admin</h2>
-        <form>
+        <form id="editAdminForm">
           <div class="form-group">
             <label for="nameEdit">Name</label>
-            <input type="text" id="nameEdit" value="Admin User" required />
+            <input type="text" id="nameEdit" required />
           </div>
           <div class="form-group">
             <label for="emailEdit">Email</label>
-            <input
-              type="email"
-              id="emailEdit"
-              value="admin@spist.edu"
-              required
-            />
+            <input type="email" id="emailEdit" required />
           </div>
           <div class="form-group">
             <label for="adminRoleEdit">Admin Role</label>
             <select id="adminRoleEdit" class="form-control" required>
               <option value="">Select a role</option>
-              <option value="super" selected>Super Admin</option>
+              <option value="super">Super Admin</option>
               <option value="system">System Admin</option>
-              <option value="content">Content Admin</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="passwordEdit">New Password</label>
+            <label for="passwordEdit"
+              >New Password (leave blank to keep current)</label
+            >
             <input type="password" id="passwordEdit" />
           </div>
           <div class="form-group">

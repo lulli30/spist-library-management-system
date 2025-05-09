@@ -1,4 +1,5 @@
 let currentBookIdForDeletion = null;
+let students = [];
 
 function closeModal() {
   const modals = document.querySelectorAll(".modal");
@@ -7,8 +8,8 @@ function closeModal() {
   currentBookIdForDeletion = null;
 }
 
-function showModal() {
-  document.getElementById("adminModal").style.display = "flex";
+function showModal(modalId) {
+  document.getElementById(modalId).style.display = "flex";
   document.body.classList.add("modal-open");
 }
 
@@ -48,7 +49,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     deleteConfirmBtn.addEventListener("click", handleDeleteBook);
   }
 
-  await loadBooks();
+  const statusEdit = document.getElementById("statusEdit");
+  if (statusEdit) {
+    statusEdit.addEventListener("change", handleStatusChange);
+  }
+
+  await Promise.all([loadBooks(), loadStudents()]);
 });
 
 async function loadBooks() {
@@ -59,6 +65,7 @@ async function loadBooks() {
       throw new Error(data.message || "Failed to fetch books");
     }
     const books = await response.json();
+    console.log("Books data received:", books);
     displayBooks(books);
   } catch (error) {
     console.error("Error:", error);
@@ -71,6 +78,7 @@ function displayBooks(books) {
   tbody.innerHTML = "";
 
   books.forEach((book) => {
+    console.log("Processing book:", book);
     const row = createBookRow(book);
     tbody.appendChild(row);
   });
@@ -79,16 +87,14 @@ function displayBooks(books) {
 function createBookRow(book) {
   const row = document.createElement("tr");
   const statusClass =
-    book.current_status.toLowerCase() === "borrowed"
+    book.current_status.toLowerCase() === "borrowed" ||
+    book.current_status.toLowerCase() === "overdue"
       ? "status-borrowed"
       : "status-available";
 
-  let statusInfo = book.current_status;
-  if (book.current_status === "Borrowed") {
-    statusInfo += `<br><small>By: ${book.borrowed_by}<br>Due: ${formatDate(
-      book.due_date
-    )}</small>`;
-  }
+  const isBorrowed =
+    book.current_status.toLowerCase() === "borrowed" ||
+    book.current_status.toLowerCase() === "overdue";
 
   row.innerHTML = `
     <td>${book.id}</td>
@@ -97,13 +103,16 @@ function createBookRow(book) {
     <td>${book.category}</td>
     <td>${book.isbn}</td>
     <td>${formatDate(book.added_date)}</td>
-    <td class="${statusClass}">${statusInfo}</td>
+    <td class="${statusClass}">${book.current_status}</td>
+    <td class="borrowed-by ${isBorrowed ? "active" : ""}">${
+    book.borrowed_by || "-"
+  }</td>
     <td>
       <button class="btn edit-btn" data-book='${JSON.stringify(
         book
       )}'>Edit</button>
       <button class="btn delete-btn" data-book-id="${book.id}" ${
-    book.current_status === "Borrowed" ? "disabled" : ""
+    isBorrowed ? "disabled" : ""
   }>Delete</button>
     </td>
   `;
@@ -124,7 +133,9 @@ function attachRowEventListeners(row) {
 
   deleteBtn.addEventListener("click", function () {
     const bookId = this.dataset.bookId;
-    showDeleteModal(bookId);
+    const modalDelete = document.getElementById("modalDelete");
+    modalDelete.dataset.bookId = bookId;
+    showModal("modalDelete");
   });
 }
 
@@ -141,6 +152,7 @@ function handleEditClick(book) {
     category: document.getElementById("categoryEdit"),
     isbn: document.getElementById("isbnEdit"),
     status: document.getElementById("statusEdit"),
+    student: document.getElementById("studentEdit"),
   };
 
   if (!Object.values(formElements).every((element) => element)) {
@@ -155,10 +167,34 @@ function handleEditClick(book) {
   formElements.isbn.value = book.isbn || "";
 
   const isBorrowed = book.current_status?.toLowerCase() === "borrowed";
-  formElements.status.disabled = isBorrowed;
-  formElements.status.value = isBorrowed
-    ? "borrowed"
-    : (book.status || "available").toLowerCase();
+  formElements.status.value = isBorrowed ? "borrowed" : "available";
+
+  const studentSelectGroup = document.getElementById("studentSelectGroup");
+  if (isBorrowed) {
+    studentSelectGroup.style.display = "block";
+    formElements.student.required = true;
+
+    if (formElements.student.options.length <= 1) {
+      students.forEach((student) => {
+        const option = document.createElement("option");
+        option.value = student.student_id;
+        option.textContent = `${student.fullname} (${student.email})`;
+        formElements.student.appendChild(option);
+      });
+    }
+
+    if (book.borrowed_by) {
+      const currentBorrower = students.find(
+        (s) => s.fullname === book.borrowed_by
+      );
+      if (currentBorrower) {
+        formElements.student.value = currentBorrower.student_id;
+      }
+    }
+  } else {
+    studentSelectGroup.style.display = "none";
+    formElements.student.required = false;
+  }
 
   const modal = document.getElementById("adminEdit");
   modal.dataset.bookId = book.id;
@@ -218,6 +254,15 @@ async function handleEditBook(e) {
     status: document.getElementById("statusEdit").value,
   };
 
+  if (formData.status === "borrowed") {
+    const studentId = document.getElementById("studentEdit").value;
+    if (!studentId) {
+      alert("Please select a student when status is borrowed");
+      return;
+    }
+    formData.student_id = studentId;
+  }
+
   if (Object.values(formData).some((value) => !value)) {
     alert("Please fill in all fields");
     return;
@@ -229,6 +274,7 @@ async function handleEditBook(e) {
   }
 
   try {
+    console.log("Sending update request with data:", formData);
     const response = await fetch(`/api/admin/books/${bookId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -245,23 +291,6 @@ async function handleEditBook(e) {
     console.error("Error:", error);
     alert(error.message || "Failed to update book. Please try again.");
   }
-}
-
-function showDeleteModal(bookId) {
-  if (!bookId) {
-    console.error("No book ID provided to showDeleteModal");
-    return;
-  }
-
-  const modal = document.getElementById("modalDelete");
-  if (!modal) {
-    console.error("Delete modal not found");
-    return;
-  }
-
-  modal.dataset.bookId = bookId;
-  modal.style.display = "flex";
-  document.body.classList.add("modal-open");
 }
 
 async function handleDeleteBook() {
@@ -308,3 +337,38 @@ document.addEventListener("DOMContentLoaded", function () {
     button.addEventListener("click", closeModal);
   });
 });
+
+async function loadStudents() {
+  try {
+    const response = await fetch("/api/admin/students");
+    if (!response.ok) {
+      throw new Error("Failed to fetch students");
+    }
+    students = await response.json();
+  } catch (error) {
+    console.error("Error loading students:", error);
+  }
+}
+
+function handleStatusChange(e) {
+  const studentSelectGroup = document.getElementById("studentSelectGroup");
+  const studentSelect = document.getElementById("studentEdit");
+
+  if (e.target.value === "borrowed") {
+    studentSelectGroup.style.display = "block";
+    studentSelect.required = true;
+
+    if (studentSelect.options.length <= 1) {
+      students.forEach((student) => {
+        const option = document.createElement("option");
+        option.value = student.student_id;
+        option.textContent = `${student.fullname} (${student.email})`;
+        studentSelect.appendChild(option);
+      });
+    }
+  } else {
+    studentSelectGroup.style.display = "none";
+    studentSelect.required = false;
+    studentSelect.value = "";
+  }
+}

@@ -3,6 +3,8 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const authRoutes = require("./src/routes/auth");
 const adminRoutes = require("./src/routes/admin");
+const studentRoutes = require("./src/routes/students");
+const bookBorrowingRoutes = require("./src/routes/book-borrowings");
 const PORT = process.env.PORT || 3000;
 
 // Initialize Express app
@@ -15,6 +17,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // API Routes
 app.use("/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/students", studentRoutes);
+app.use("/api/book-borrowings", bookBorrowingRoutes);
 
 // API Error Handler
 app.use("/api", (err, req, res, next) => {

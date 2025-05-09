@@ -3,134 +3,149 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const db = require("../config/database");
 
-// Login route
+const queryDB = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+};
+
+const authenticateAdmin = async (email, password) => {
+  const adminResults = await queryDB("SELECT * FROM admins WHERE email = ?", [
+    email,
+  ]);
+
+  if (adminResults.length === 0) return null;
+
+  const admin = adminResults[0];
+  const passwordMatch = await bcrypt.compare(password, admin.password);
+
+  return passwordMatch ? admin : null;
+};
+
+const authenticateStudent = async (email, password) => {
+  const studentResults = await queryDB(
+    "SELECT * FROM students WHERE email = ?",
+    [email]
+  );
+
+  if (studentResults.length === 0) return null;
+
+  const student = studentResults[0];
+  const passwordMatch = await bcrypt.compare(password, student.password);
+
+  return passwordMatch ? student : null;
+};
+
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  // Check admin login
-  const adminQuery = "SELECT * FROM admins WHERE email = ?";
-  db.query(adminQuery, [email], async (err, results) => {
-    if (err) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
+    const admin = await authenticateAdmin(email, password);
+    if (admin) {
+      return res.json({
+        success: true,
+        userRole: "admin",
+        adminId: admin.id,
+        role: admin.role,
+      });
     }
 
-    if (results.length > 0) {
-      const admin = results[0];
-      // For now, since sample data has plain text passwords, we'll do a direct comparison
-      // In production, you should use bcrypt.compare like with students
-      if (password === admin.password) {
-        return res.json({
-          success: true,
-          userRole: "admin",
-          adminId: admin.id,
-          role: admin.role,
-        });
-      }
-    }
-
-    // If admin login fails, check student login
-    const studentQuery = "SELECT * FROM students WHERE email = ?";
-    db.query(studentQuery, [email], async (err, results) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
-      }
-
-      if (results.length === 0) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Invalid credentials" });
-      }
-
-      const student = results[0];
-      const passwordMatch = await bcrypt.compare(password, student.password);
-
-      if (!passwordMatch) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Invalid credentials" });
-      }
-
-      res.json({
+    const student = await authenticateStudent(email, password);
+    if (student) {
+      return res.json({
         success: true,
         userRole: "student",
         studentId: student.id,
       });
-    });
-  });
-});
-
-// Signup route
-router.post("/signup", async (req, res) => {
-  const {
-    student_id,
-    fullname,
-    email,
-    password,
-    department,
-    year_level,
-    student_type,
-    contact_number,
-    status,
-  } = req.body;
-
-  // Check if email already exists
-  const checkQuery = "SELECT * FROM students WHERE email = ? OR student_id = ?";
-  db.query(checkQuery, [email, student_id], async (err, results) => {
-    if (err) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
     }
 
-    if (results.length > 0) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid credentials",
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred during login",
+    });
+  }
+});
+
+const checkExistingStudent = async (email, studentId) => {
+  const existingUser = await queryDB(
+    "SELECT * FROM students WHERE email = ? OR student_id = ?",
+    [email, studentId]
+  );
+
+  if (existingUser.length > 0) {
+    const message =
+      existingUser[0].email === email
+        ? "Email already exists"
+        : "Student ID already exists";
+    return { exists: true, message };
+  }
+
+  return { exists: false };
+};
+
+router.post("/signup", async (req, res) => {
+  try {
+    const {
+      student_id,
+      fullname,
+      email,
+      password,
+      department,
+      year_level,
+      student_type,
+      contact_number,
+      status,
+    } = req.body;
+
+    const existingCheck = await checkExistingStudent(email, student_id);
+    if (existingCheck.exists) {
       return res.status(400).json({
         success: false,
-        message:
-          results[0].email === email
-            ? "Email already exists"
-            : "Student ID already exists",
+        message: existingCheck.message,
       });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const insertQuery = `
+      INSERT INTO students (
+        student_id, fullname, email, password, 
+        department, year_level, student_type, 
+        contact_number, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-    // Insert new student with all fields
-    const insertQuery =
-      "INSERT INTO students (student_id, fullname, email, password, department, year_level, student_type, contact_number, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    await queryDB(insertQuery, [
+      student_id,
+      fullname,
+      email,
+      hashedPassword,
+      department,
+      year_level,
+      student_type,
+      contact_number,
+      status,
+    ]);
 
-    db.query(
-      insertQuery,
-      [
-        student_id,
-        fullname,
-        email,
-        hashedPassword,
-        department,
-        year_level,
-        student_type,
-        contact_number,
-        status,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Error creating account" });
-        }
-
-        res.json({
-          success: true,
-          message: "Account created successfully",
-        });
-      }
-    );
-  });
+    res.json({
+      success: true,
+      message: "Account created successfully",
+    });
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error creating account",
+    });
+  }
 });
 
 module.exports = router;

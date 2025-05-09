@@ -368,6 +368,44 @@
       .user-table td {
         transition: all 0.3s ease;
       }
+
+      .book-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+
+      .book-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .book-title {
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+
+      .book-details {
+        font-size: 0.9em;
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .status {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+      }
+
+      .status.borrowed {
+        background: rgba(76, 175, 80, 0.2);
+      }
+
+      .status.overdue {
+        background: rgba(244, 67, 54, 0.2);
+        color: #f44336;
+      }
     </style>
 
     <link
@@ -406,81 +444,277 @@
           document.getElementById("adminInitial").textContent =
             adminData.fullname.charAt(0).toUpperCase();
         } catch (error) {
-          console.error("Error:", error);
+          console.error("Error fetching admin data:", error);
         }
 
+        async function fetchStudentsData() {
+          try {
+            const response = await fetch("/api/students");
+            if (!response.ok) {
+              throw new Error(
+                `Failed to fetch students data: ${response.statusText}`
+              );
+            }
+            const students = await response.json();
+            console.log("Fetched students:", students);
+
+            const studentsWithBooks = await Promise.all(
+              students.map(async (student) => {
+                try {
+                  const borrowingsResponse = await fetch(
+                    `/api/book-borrowings/${student.student_id}`
+                  );
+                  if (!borrowingsResponse.ok) {
+                    console.warn(
+                      `Failed to fetch borrowings for student ${student.student_id}: ${borrowingsResponse.statusText}`
+                    );
+                    return {
+                      ...student,
+                      rented_books: 0,
+                      books_title: "",
+                      date_to_return: "No active rentals",
+                    };
+                  }
+                  const borrowings = await borrowingsResponse.json();
+                  console.log(
+                    `Borrowings for student ${student.student_id}:`,
+                    borrowings
+                  );
+
+                  return {
+                    ...student,
+                    rented_books: borrowings.total_borrowed,
+                    books_title: borrowings.books
+                      .map((b) => b.title)
+                      .join(", "),
+                    date_to_return:
+                      borrowings.total_borrowed > 0
+                        ? new Date(
+                            Math.min(
+                              ...borrowings.books.map(
+                                (b) => new Date(b.due_date)
+                              )
+                            )
+                          ).toLocaleDateString()
+                        : "No active rentals",
+                  };
+                } catch (error) {
+                  console.error(
+                    `Error processing student ${student.student_id}:`,
+                    error
+                  );
+                  return {
+                    ...student,
+                    rented_books: 0,
+                    books_title: "",
+                    date_to_return: "Error fetching data",
+                  };
+                }
+              })
+            );
+
+            updateTable(studentsWithBooks);
+          } catch (error) {
+            console.error("Error:", error);
+            const tbody = document.querySelector(".user-table tbody");
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="7" style="text-align: center; color: red; padding: 20px;">
+                  Failed to load student data. Please try refreshing the page.
+                  <br>
+                  Error: ${error.message}
+                </td>
+              </tr>
+            `;
+          }
+        }
+
+        function updateTable(students) {
+          const tbody = document.querySelector(".user-table tbody");
+          tbody.innerHTML = "";
+
+          students.forEach((student) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${student.fullname}</td>
+              <td>${student.student_id}</td>
+              <td>${student.department}</td>
+              <td>${student.year_level}</td>
+              <td>${student.rented_books}</td>
+              <td>${student.books_title || ""}</td>
+              <td>${student.date_to_return}</td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          const firstRow = tbody.querySelector("tr");
+          if (firstRow) {
+            firstRow.click();
+          }
+        }
+
+        fetchStudentsData();
+
         const userTable = document.querySelector(".user-table tbody");
-        userTable.addEventListener("click", function (e) {
+        userTable.addEventListener("click", async function (e) {
           const row = e.target.closest("tr");
           if (!row) return;
 
           const allRows = userTable.querySelectorAll("tr");
           allRows.forEach((r) => r.classList.remove("selected-row"));
-
           row.classList.add("selected-row");
 
           const cells = row.cells;
-          const userData = {
-            name: cells[0].textContent,
-            studentId: cells[1].textContent,
-            yearCourse: cells[2].textContent,
-            rentedBooksCount: cells[3].textContent,
-            bookTitles: cells[4].textContent,
-            returnDate: cells[5].textContent,
-            contactNumber: cells[6] ? cells[6].textContent : "09123456789",
-          };
+          const studentId = cells[1].textContent;
 
-          updateUserInfoCard(userData);
+          try {
+            const studentResponse = await fetch(`/api/students/${studentId}`);
+            if (!studentResponse.ok) {
+              throw new Error(
+                `Failed to fetch student details: ${studentResponse.statusText}`
+              );
+            }
+            const studentData = await studentResponse.json();
+            console.log("Fetched student details:", studentData);
+
+            const userData = {
+              name: cells[0].textContent,
+              studentId: cells[1].textContent,
+              department: cells[2].textContent,
+              yearLevel: cells[3].textContent,
+              email: studentData.email,
+              contactNumber: studentData.contact_number,
+              rentedBooksCount: cells[4].textContent,
+              bookTitles: cells[5].textContent,
+              returnDate: cells[6].textContent,
+            };
+
+            await updateUserInfoCard(userData);
+          } catch (error) {
+            console.error("Error fetching student details:", error);
+          }
         });
 
-        const firstRow = userTable.querySelector("tr");
-        if (firstRow) {
-          firstRow.click();
+        async function updateUserInfoCard(userData) {
+          document.querySelector(".profile-details h2").textContent =
+            userData.name;
+          document.querySelector(
+            ".student-id"
+          ).textContent = `Student ID: ${userData.studentId}`;
+
+          const detailItems = document.querySelectorAll(".detail-item");
+
+          detailItems[0].querySelector(".detail-value").textContent =
+            userData.department;
+
+          detailItems[1].querySelector(".detail-value").textContent =
+            userData.yearLevel;
+
+          detailItems[2].querySelector(".detail-value").textContent =
+            userData.email;
+
+          detailItems[3].querySelector(".detail-value").textContent =
+            userData.contactNumber || "Not provided";
+
+          const bookList = document.querySelector(".book-list");
+
+          try {
+            const borrowingsResponse = await fetch(
+              `/api/book-borrowings/${userData.studentId}`
+            );
+            if (!borrowingsResponse.ok) {
+              throw new Error("Failed to fetch borrowings");
+            }
+            const borrowingsData = await borrowingsResponse.json();
+
+            if (borrowingsData.total_borrowed === 0) {
+              bookList.innerHTML =
+                '<div class="book-placeholder">No books currently rented</div>';
+            } else {
+              const bookItems = borrowingsData.books
+                .map(
+                  (book) => `
+                <div class="book-item">
+                  <div class="book-title">${book.title}</div>
+                  <div class="book-details">
+                    <span class="due-date">Due: ${new Date(
+                      book.due_date
+                    ).toLocaleDateString()}</span>
+                    <span class="status ${book.status.toLowerCase()}">${
+                    book.status
+                  }</span>
+                  </div>
+                </div>`
+                )
+                .join("");
+              bookList.innerHTML = bookItems;
+            }
+
+            const visitInfo = document.querySelector(".visit-info");
+            if (borrowingsData.total_borrowed > 0) {
+              const nextDueDate = new Date(
+                Math.min(
+                  ...borrowingsData.books.map((b) => new Date(b.due_date))
+                )
+              ).toLocaleDateString();
+              visitInfo.innerHTML = `
+                <label>Next Return Due:</label>
+                <span class="visit-value">${nextDueDate}</span>
+              `;
+            } else {
+              visitInfo.innerHTML = `
+                <label>Status:</label>
+                <span class="visit-value">No active rentals</span>
+              `;
+            }
+          } catch (error) {
+            console.error("Error updating book information:", error);
+            bookList.innerHTML =
+              '<div class="book-placeholder">Error loading book information</div>';
+            const visitInfo = document.querySelector(".visit-info");
+            visitInfo.innerHTML = `
+              <label>Status:</label>
+              <span class="visit-value">Error loading data</span>
+            `;
+          }
         }
+
+        const style = document.createElement("style");
+        style.textContent = `
+          .book-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+          }
+          .book-item:last-child {
+            margin-bottom: 0;
+          }
+          .book-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+          }
+          .book-details {
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            color: rgba(255, 255, 255, 0.8);
+          }
+          .status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+          }
+          .status.borrowed {
+            background: rgba(76, 175, 80, 0.2);
+          }
+          .status.overdue {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+          }
+        `;
+        document.head.appendChild(style);
       });
-
-      function updateUserInfoCard(userData) {
-        document.querySelector(".profile-details h2").textContent =
-          userData.name;
-        document.querySelector(
-          ".student-id"
-        ).textContent = `Student id: ${userData.studentId}`;
-
-        const yearCourse = userData.yearCourse.split(" ");
-        document.querySelector(
-          ".detail-item:nth-child(2) .detail-value"
-        ).textContent = userData.yearCourse;
-
-        document.querySelector(
-          ".detail-item:last-child .detail-value"
-        ).textContent = userData.contactNumber;
-
-        const bookList = document.querySelector(".book-list");
-        if (userData.rentedBooksCount === "0" || !userData.bookTitles.trim()) {
-          bookList.innerHTML =
-            '<div class="book-placeholder">No books currently rented</div>';
-        } else {
-          const books = userData.bookTitles
-            .split(",")
-            .map((book) => book.trim());
-          bookList.innerHTML = books
-            .map((book) => `<div class="book-item">${book}</div>`)
-            .join("");
-        }
-
-        const visitInfo = document.querySelector(".visit-info");
-        if (userData.returnDate && userData.returnDate !== "mm/dd/yyyy") {
-          visitInfo.innerHTML = `
-            <label>Return Date:</label>
-            <span class="visit-value">${userData.returnDate}</span>
-          `;
-        } else {
-          visitInfo.innerHTML = `
-            <label>Status:</label>
-            <span class="visit-value">No active rentals</span>
-          `;
-        }
-      }
     </script>
 
     <title>User Management - SPIST Library</title>
@@ -559,12 +793,12 @@
             </div>
             <div class="user-details-grid">
               <div class="detail-item">
-                <label>Age:</label>
-                <span class="detail-value">20</span>
+                <label>Course:</label>
+                <span class="detail-value">Computer Science</span>
               </div>
               <div class="detail-item">
-                <label>Year&Course:</label>
-                <span class="detail-value">3rd ComSci</span>
+                <label>Year Level:</label>
+                <span class="detail-value">3rd Year</span>
               </div>
               <div class="detail-item">
                 <label>Email:</label>
@@ -592,21 +826,17 @@
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Student id</th>
-                  <th>Course&Year</th>
-                  <th>Rented books</th>
-                  <th>Books title</th>
-                  <th>Date to return</th>
+                  <th>Student ID</th>
+                  <th>Course</th>
+                  <th>Year</th>
+                  <th>Rented Books</th>
+                  <th>Books Title</th>
+                  <th>Date to Return</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>John Doe</td>
-                  <td>c22-4587-01</td>
-                  <td>3rd Comsci</td>
-                  <td>0</td>
-                  <td></td>
-                  <td>mm/dd/yyyy</td>
+                  <td>Loading students data...</td>
                 </tr>
               </tbody>
             </table>

@@ -6,7 +6,6 @@
     <link rel="icon" type="image/png" href="/img/school-logo-large.png" />
     <link rel="stylesheet" href="/css/common.css" />
     <link rel="stylesheet" href="/css/admin.css" />
-    <!-- Fallback styles in case common.css is missing -->
     <style>
       * {
         margin: 0;
@@ -483,6 +482,16 @@
         margin-top: 4px;
       }
 
+      /* Borrowed by styles */
+      .borrowed-by {
+        font-weight: 500;
+        color: #1b5e20;
+      }
+
+      .borrowed-by.active {
+        color: #ff5252;
+      }
+
       /* Disabled button styles */
       .btn.delete-btn[disabled] {
         opacity: 0.5;
@@ -521,8 +530,38 @@
         true
       );
     </script>
-    <script src="/js/books.js" defer></script>
     <script src="/js/admin.js" defer></script>
+    <script src="/js/books.js" defer></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", async function () {
+        const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+        const userRole = sessionStorage.getItem("userRole");
+        const adminId = sessionStorage.getItem("adminId");
+
+        if (isLoggedIn !== "true" || userRole !== "admin") {
+          alert("Please log in with admin credentials to access this page.");
+          window.location.href = "/login";
+          return;
+        }
+
+        try {
+          const adminResponse = await fetch(`/api/admin/${adminId}`);
+          if (!adminResponse.ok) {
+            throw new Error("Failed to fetch admin information");
+          }
+          const adminData = await adminResponse.json();
+
+          document.getElementById("adminName").textContent = adminData.fullname;
+          document.getElementById("adminEmail").textContent = adminData.email;
+          document.getElementById("adminRole").textContent = adminData.role;
+          document.getElementById("adminInitial").textContent =
+            adminData.fullname.charAt(0).toUpperCase();
+        } catch (error) {
+          console.error("Error fetching admin data:", error);
+        }
+      });
+    </script>
 
     <title>Book Management - SPIST Library</title>
   </head>
@@ -592,7 +631,7 @@
         <div class="maincontent">
           <div class="user-info">
             <h2>Book Management</h2>
-            <button class="add-admin" onclick="showModal()">
+            <button class="add-admin" onclick="showModal('adminModal')">
               <span class="material-symbols-outlined">add</span>Add Book
             </button>
           </div>
@@ -612,45 +651,12 @@
                   <th>ISBN</th>
                   <th>Added Date</th>
                   <th>Status</th>
+                  <th>Rented by</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Introduction to Programming</td>
-                  <td>John Smith</td>
-                  <td>Computer Science</td>
-                  <td>978-3-16-148410-0</td>
-                  <td>2024-03-15</td>
-                  <td>Available</td>
-                  <td>
-                    <button class="btn edit-btn" onclick="showModalEdit()">
-                      Edit
-                    </button>
-                    <button class="btn delete-btn" onclick="modalDelete()">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>Data Structures and Algorithms</td>
-                  <td>Jane Doe</td>
-                  <td>Computer Science</td>
-                  <td>978-3-16-148410-1</td>
-                  <td>2024-03-16</td>
-                  <td>Borrowed</td>
-                  <td>
-                    <button class="btn edit-btn" onclick="showModalEdit()">
-                      Edit
-                    </button>
-                    <button class="btn delete-btn" onclick="modalDelete()">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-                <!-- Add more rows as needed -->
+                <!-- Table content will be dynamically loaded by JavaScript -->
               </tbody>
             </table>
           </div>
@@ -715,6 +721,12 @@
             <select id="statusEdit" name="status" required>
               <option value="available">Available</option>
               <option value="borrowed">Borrowed</option>
+            </select>
+          </div>
+          <div class="form-group" id="studentSelectGroup" style="display: none">
+            <label for="studentEdit">Assign to Student</label>
+            <select id="studentEdit" name="student">
+              <option value="">Select a student...</option>
             </select>
           </div>
           <div class="form-actions">
