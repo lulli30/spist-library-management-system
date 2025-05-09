@@ -420,3 +420,64 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #ef9a9a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-message::before {
+  content: "error";
+  font-family: "Material Symbols Outlined";
+  font-size: 20px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background-color: white;
+  border-radius: 15px;
+  color: #666;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.empty-state .material-symbols-outlined {
+  font-size: 48px;
+  margin-bottom: 10px;
+  color: #4caf50;
+}
+
+.empty-state h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.empty-state p {
+  max-width: 400px;
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.browse-books-btn {
+  background-color: #4caf50;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+}
+
+.browse-books-btn:hover {
+  background-color: #388e3c;
+}

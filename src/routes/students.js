@@ -94,7 +94,12 @@ router.get("/:studentId", async (req, res) => {
 router.get("/books/recommended/:studentId", async (req, res) => {
   try {
     const studentId = req.params.studentId;
-    console.log("Fetching recommendations for student:", studentId); // Debug log
+    console.log("Fetching recommendations for student:", studentId);
+
+    // Validate student ID
+    if (!studentId) {
+      return res.status(400).json({ error: "Student ID is required" });
+    }
 
     // First, get the user's reading preferences based on their history
     const preferencesQuery = `
@@ -110,12 +115,55 @@ router.get("/books/recommended/:studentId", async (req, res) => {
       LIMIT 3
     `;
 
-    const preferences = await executeQuery(preferencesQuery, [studentId]);
-    console.log("User preferences:", preferences); // Debug log
+    try {
+      const preferences = await executeQuery(preferencesQuery, [studentId]);
+      console.log("User preferences:", preferences);
 
-    if (preferences.length === 0) {
-      // If no borrowing history, return popular books or random selection
-      const generalRecsQuery = `
+      if (preferences.length === 0) {
+        // If no borrowing history, return popular books or random selection
+        const generalRecsQuery = `
+          SELECT DISTINCT
+            b.id,
+            b.title,
+            b.author,
+            b.category,
+            b.status,
+            CASE 
+              WHEN bb.id IS NOT NULL THEN 'borrowed'
+              ELSE b.status
+            END as current_status,
+            COUNT(bb2.id) as popularity
+          FROM books b
+          LEFT JOIN (
+            SELECT book_id, id
+            FROM book_borrowings
+            WHERE status = 'borrowed'
+          ) bb ON b.id = bb.book_id
+          LEFT JOIN book_borrowings bb2 ON b.id = bb2.book_id
+          WHERE b.status = 'available'
+          AND b.status != 'deleted'
+          GROUP BY b.id, b.title, b.author, b.category, b.status, bb.id
+          ORDER BY popularity DESC, RAND()
+          LIMIT 10
+        `;
+        console.log("Fetching general recommendations");
+        const generalRecs = await executeQuery(generalRecsQuery);
+        console.log("General recommendations found:", generalRecs.length);
+        return res.json(generalRecs);
+      }
+
+      // Build conditions for recommendations based on preferences
+      const conditions = preferences
+        .map(
+          (pref) =>
+            `(b.author = ${db.escape(pref.author)} OR b.category = ${db.escape(
+              pref.category
+            )})`
+        )
+        .join(" OR ");
+
+      // Get recommended books based on user preferences
+      const recommendationsQuery = `
         SELECT DISTINCT
           b.id,
           b.title,
@@ -126,121 +174,84 @@ router.get("/books/recommended/:studentId", async (req, res) => {
             WHEN bb.id IS NOT NULL THEN 'borrowed'
             ELSE b.status
           END as current_status,
-          (
-            SELECT COUNT(*)
-            FROM book_borrowings
-            WHERE book_id = b.id
-          ) as popularity
+          CASE
+            WHEN b.author IN (${preferences
+              .map((p) => db.escape(p.author))
+              .join(",")}) THEN 2
+            WHEN b.category IN (${preferences
+              .map((p) => db.escape(p.category))
+              .join(",")}) THEN 1
+            ELSE 0
+          END as relevance_score
         FROM books b
         LEFT JOIN (
           SELECT book_id, id
           FROM book_borrowings
           WHERE status = 'borrowed'
         ) bb ON b.id = bb.book_id
-        WHERE b.status = 'available'
-        AND b.status != 'deleted'
-        ORDER BY popularity DESC, RAND()
+        LEFT JOIN (
+          SELECT book_id
+          FROM book_borrowings
+          WHERE student_id = ?
+        ) user_borrows ON b.id = user_borrows.book_id
+        WHERE b.status != 'deleted'
+          AND (${conditions})
+          AND (user_borrows.book_id IS NULL OR b.status = 'available')
+        ORDER BY relevance_score DESC, RAND()
         LIMIT 10
       `;
-      console.log("Fetching general recommendations"); // Debug log
-      const generalRecs = await executeQuery(generalRecsQuery);
-      console.log("General recommendations found:", generalRecs.length); // Debug log
-      return res.json(generalRecs);
-    }
 
-    // Build conditions for recommendations based on preferences
-    const conditions = preferences
-      .map(
-        (pref) =>
-          `(b.author = ${db.escape(pref.author)} OR b.category = ${db.escape(
-            pref.category
-          )})`
-      )
-      .join(" OR ");
-
-    // Get recommended books based on user preferences
-    const recommendationsQuery = `
-      SELECT DISTINCT
-        b.id,
-        b.title,
-        b.author,
-        b.category,
-        b.status,
-        CASE 
-          WHEN bb.id IS NOT NULL THEN 'borrowed'
-          ELSE b.status
-        END as current_status,
-        CASE
-          WHEN b.author IN (${preferences
-            .map((p) => db.escape(p.author))
-            .join(",")}) THEN 2
-          WHEN b.category IN (${preferences
-            .map((p) => db.escape(p.category))
-            .join(",")}) THEN 1
-          ELSE 0
-        END as relevance_score
-      FROM books b
-      LEFT JOIN (
-        SELECT book_id, id
-        FROM book_borrowings
-        WHERE status = 'borrowed'
-      ) bb ON b.id = bb.book_id
-      LEFT JOIN (
-        SELECT book_id
-        FROM book_borrowings
-        WHERE student_id = ?
-      ) user_borrows ON b.id = user_borrows.book_id
-      WHERE b.status != 'deleted'
-        AND (${conditions})
-        AND (user_borrows.book_id IS NULL OR b.status = 'available')
-      ORDER BY relevance_score DESC, RAND()
-      LIMIT 10
-    `;
-
-    console.log("Fetching personalized recommendations"); // Debug log
-    const recommendations = await executeQuery(recommendationsQuery, [
-      studentId,
-    ]);
-    console.log("Personalized recommendations found:", recommendations.length); // Debug log
-
-    // If we didn't get enough recommendations, add some general ones
-    if (recommendations.length < 10) {
-      const remainingCount = 10 - recommendations.length;
-      const additionalRecsQuery = `
-        SELECT DISTINCT
-          b.id,
-          b.title,
-          b.author,
-          b.category,
-          b.status,
-          CASE 
-            WHEN bb.id IS NOT NULL THEN 'borrowed'
-            ELSE b.status
-          END as current_status
-        FROM books b
-        LEFT JOIN (
-          SELECT book_id, id
-          FROM book_borrowings
-          WHERE status = 'borrowed'
-        ) bb ON b.id = bb.book_id
-        WHERE b.status = 'available'
-        AND b.status != 'deleted'
-        AND b.id NOT IN (${recommendations
-          .map((r) => db.escape(r.id))
-          .join(",")})
-        ORDER BY RAND()
-        LIMIT ?
-      `;
-
-      const additionalRecs = await executeQuery(additionalRecsQuery, [
-        remainingCount,
+      console.log("Fetching personalized recommendations");
+      const recommendations = await executeQuery(recommendationsQuery, [
+        studentId,
       ]);
-      recommendations.push(...additionalRecs);
-    }
+      console.log(
+        "Personalized recommendations found:",
+        recommendations.length
+      );
 
-    res.json(recommendations);
+      // If we didn't get enough recommendations, add some general ones
+      if (recommendations.length < 10) {
+        const remainingCount = 10 - recommendations.length;
+        const additionalRecsQuery = `
+          SELECT DISTINCT
+            b.id,
+            b.title,
+            b.author,
+            b.category,
+            b.status,
+            CASE 
+              WHEN bb.id IS NOT NULL THEN 'borrowed'
+              ELSE b.status
+            END as current_status
+          FROM books b
+          LEFT JOIN (
+            SELECT book_id, id
+            FROM book_borrowings
+            WHERE status = 'borrowed'
+          ) bb ON b.id = bb.book_id
+          WHERE b.status = 'available'
+          AND b.status != 'deleted'
+          AND b.id NOT IN (${recommendations
+            .map((r) => db.escape(r.id))
+            .join(",")})
+          ORDER BY RAND()
+          LIMIT ?
+        `;
+
+        const additionalRecs = await executeQuery(additionalRecsQuery, [
+          remainingCount,
+        ]);
+        recommendations.push(...additionalRecs);
+      }
+
+      res.json(recommendations);
+    } catch (err) {
+      console.error("Error fetching recommendations:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
   } catch (err) {
-    console.error("Error fetching recommended books:", err);
+    console.error("Error fetching recommendations:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -335,6 +346,35 @@ router.post("/borrow-book", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error borrowing book",
+    });
+  }
+});
+
+// Get student's borrowing history
+router.get("/borrowing-history/:studentId", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const query = `
+      SELECT 
+        b.title,
+        b.author,
+        bb.borrow_date,
+        bb.return_date,
+        DATEDIFF(COALESCE(bb.return_date, CURRENT_DATE), bb.borrow_date) as duration
+      FROM book_borrowings bb
+      JOIN books b ON bb.book_id = b.id
+      WHERE bb.student_id = ?
+      ORDER BY bb.borrow_date DESC
+    `;
+
+    const borrowingHistory = await executeQuery(query, [studentId]);
+    res.json(borrowingHistory);
+  } catch (error) {
+    console.error("Error fetching borrowing history:", error);
+    res.status(500).json({
+      message: "Error fetching borrowing history",
+      error: error.message,
     });
   }
 });

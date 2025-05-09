@@ -300,18 +300,16 @@
 
     <!-- JavaScript -->
     <script src="/js/user.js" defer></script>
+    <script src="/js/student-borrowed.js" defer></script>
     <script>
       // Authentication check - redirect if not logged in as student
       document.addEventListener("DOMContentLoaded", function () {
         const isLoggedIn = sessionStorage.getItem("isLoggedIn");
         const userRole = sessionStorage.getItem("userRole");
 
-        // For demonstration, we'll set student role if not logged in
-        if (!isLoggedIn || !userRole) {
-          sessionStorage.setItem("isLoggedIn", "true");
-          sessionStorage.setItem("userRole", "student");
-          sessionStorage.setItem("userName", "Maria Garcia");
-          sessionStorage.setItem("userID", "STD-2023-001");
+        if (!isLoggedIn || userRole !== "student") {
+          window.location.href = "/login";
+          return;
         }
 
         // Display user name from session storage
@@ -327,31 +325,6 @@
           userIDElement.textContent =
             sessionStorage.getItem("userID") || "STD-0000-000";
         }
-
-        // Initialize filter buttons
-        const filterButtons = document.querySelectorAll(
-          ".status-filter button"
-        );
-        filterButtons.forEach((button) => {
-          button.addEventListener("click", function () {
-            // Remove active class from all buttons
-            filterButtons.forEach((btn) => btn.classList.remove("active"));
-            // Add active class to clicked button
-            this.classList.add("active");
-
-            // Show empty state if returned is selected
-            const tableWrapper = document.querySelector(".table-wrapper");
-            const emptyState = document.querySelector(".empty-state");
-
-            if (this.getAttribute("data-filter") === "returned") {
-              tableWrapper.style.display = "none";
-              emptyState.style.display = "flex";
-            } else {
-              tableWrapper.style.display = "block";
-              emptyState.style.display = "none";
-            }
-          });
-        });
       });
 
       // Function to show logout modal
@@ -367,15 +340,9 @@
       // Function to logout
       function logout() {
         // Clear session storage
-        sessionStorage.removeItem("isLoggedIn");
-        sessionStorage.removeItem("userRole");
-        sessionStorage.removeItem("userName");
-        sessionStorage.removeItem("userID");
-
+        sessionStorage.clear();
         closeLogoutModal();
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 1000);
+        window.location.href = "/login";
       }
     </script>
 
@@ -455,69 +422,6 @@
             <div class="spacerdiv"></div>
           </div>
 
-          <!-- Status Filter -->
-          <div class="status-filter">
-            <button class="active" data-filter="all">All Books</button>
-            <button data-filter="active">Active</button>
-            <button data-filter="overdue">Overdue</button>
-            <button data-filter="returned">Returned</button>
-          </div>
-
-          <!-- Borrowed Books Table -->
-          <div class="table-wrapper">
-            <table class="user-table">
-              <thead>
-                <tr>
-                  <th>Book Title</th>
-                  <th>Author</th>
-                  <th>Borrowed Date</th>
-                  <th>Due Date</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Introduction to Programming</td>
-                  <td>John Smith</td>
-                  <td>Nov 10, 2023</td>
-                  <td>Dec 10, 2023</td>
-                  <td><span class="status-pill status-active">Active</span></td>
-                  <td>
-                    <button class="book-return-btn" onclick="showBookuser()">
-                      Return
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Data Structures and Algorithms</td>
-                  <td>Jane Doe</td>
-                  <td>Nov 15, 2023</td>
-                  <td>Dec 5, 2023</td>
-                  <td>
-                    <span class="status-pill status-overdue">Overdue</span>
-                  </td>
-                  <td>
-                    <button class="book-return-btn" onclick="showBookuser()">
-                      Return
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Empty state for returned books -->
-          <div class="empty-state" style="display: none">
-            <span class="material-symbols-outlined">sentiment_satisfied</span>
-            <h3>No Returned Books Found</h3>
-            <p>
-              You haven't returned any books yet. Books that you return will
-              appear here.
-            </p>
-            <a href="/student-books" class="browse-books-btn">Browse Books</a>
-          </div>
-
           <!-- Borrowing History -->
           <div class="section-heading">
             <span class="material-symbols-outlined">history</span>
@@ -536,20 +440,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>The Art of Computer Programming</td>
-                  <td>Donald Knuth</td>
-                  <td>Oct 5, 2023</td>
-                  <td>Nov 3, 2023</td>
-                  <td>29 days</td>
-                </tr>
-                <tr>
-                  <td>Introduction to Algorithms</td>
-                  <td>Thomas H. Cormen</td>
-                  <td>Sept 12, 2023</td>
-                  <td>Oct 10, 2023</td>
-                  <td>28 days</td>
-                </tr>
+                <!-- Table content will be dynamically loaded by JavaScript -->
               </tbody>
             </table>
           </div>
