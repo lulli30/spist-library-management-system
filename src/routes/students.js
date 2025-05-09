@@ -298,23 +298,16 @@ router.post("/borrow-book", async (req, res) => {
               student_id, 
               borrow_date, 
               due_date,
-              return_date,
               status
             ) VALUES (
               ?, 
               ?, 
               CURRENT_TIMESTAMP, 
               ?,
-              ?,
               'borrowed'
             )
           `;
-          await executeQuery(borrowQuery, [
-            bookId,
-            studentId,
-            returnDate,
-            returnDate,
-          ]);
+          await executeQuery(borrowQuery, [bookId, studentId, returnDate]);
 
           const updateBookQuery = `
             UPDATE books 
