@@ -8,21 +8,17 @@ const bookBorrowingRoutes = require("./src/routes/book-borrowings");
 const booksRoutes = require("./src/routes/books");
 const PORT = process.env.PORT || 3000;
 
-// Initialize Express app
 const app = express();
 
-// Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// API Routes
 app.use("/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/book-borrowings", bookBorrowingRoutes);
 app.use("/api/books", booksRoutes);
 
-// API Error Handler
 app.use("/api", (err, req, res, next) => {
   console.error("API Error:", err);
   res.status(500).json({
@@ -32,11 +28,9 @@ app.use("/api", (err, req, res, next) => {
   });
 });
 
-// Static Files
 app.use(express.static("public"));
 app.use("/pages", express.static(path.join(__dirname, "src/pages")));
 
-// Authentication Pages
 const authPages = {
   "/": "home.html",
   "/login": "login.html",
@@ -50,7 +44,6 @@ Object.entries(authPages).forEach(([route, page]) => {
   });
 });
 
-// Admin Dashboard Pages
 const adminPages = [
   "admin",
   "admin-dashboard",
@@ -66,7 +59,6 @@ adminPages.forEach((page) => {
   });
 });
 
-// Student Dashboard Pages
 const studentPages = [
   "student",
   "student-dashboard",
@@ -81,9 +73,7 @@ studentPages.forEach((page) => {
   });
 });
 
-// Catch-all Route Handler
 app.get("*", (req, res) => {
-  // Skip API routes
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({
       success: false,
@@ -91,7 +81,6 @@ app.get("*", (req, res) => {
     });
   }
 
-  // Handle page requests
   const requestedPage = req.path.substring(1);
   const pagesPath = path.join(__dirname, "src/pages", requestedPage);
 
@@ -106,7 +95,6 @@ app.get("*", (req, res) => {
   }
 });
 
-// Start Server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Open http://localhost:${PORT} in your browser`);

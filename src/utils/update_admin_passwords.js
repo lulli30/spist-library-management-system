@@ -9,7 +9,7 @@ const executeQuery = (sql, params = []) => {
     });
   });
 };
-W;
+
 const isPasswordHashed = (password) => {
   return password.startsWith("$2b$") || password.startsWith("$2a$");
 };
