@@ -72,7 +72,6 @@ const studentPages = [
   "student-dashboard",
   "student-books",
   "student-borrowed",
-  "student-profile",
 ];
 
 studentPages.forEach((page) => {
