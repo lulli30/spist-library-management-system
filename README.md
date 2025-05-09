@@ -97,6 +97,8 @@ Before you begin, ensure you have the following installed:
 
 ## Getting Started
 
+### Option 1: Using Git
+
 1. Clone the repository:
 
    ```bash
@@ -105,10 +107,27 @@ Before you begin, ensure you have the following installed:
    ```
 
 2. Install dependencies:
-
    ```bash
    npm install
    ```
+
+### Option 2: Using Google Drive
+
+If you're not familiar with Git, you can download the project from Google Drive:
+
+1. Download the project:
+
+   - Visit [SPIST Library System (Google Drive)](https://drive.google.com/drive/folders/1I5gMDVPeQkxC0WkCdzfV2zRHOhOf-7pm?usp=sharing)
+   - Download the ZIP file
+   - Extract the ZIP file to your desired location
+   - Open terminal/command prompt in the extracted folder
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Continue Setup
 
 3. Start MySQL service:
 
