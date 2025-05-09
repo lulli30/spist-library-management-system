@@ -416,7 +416,6 @@ router.get("/dashboard/stats", async (req, res) => {
   }
 });
 
-// Admin Management Routes
 router.get("/", async (req, res) => {
   try {
     const admins = await queryDB(

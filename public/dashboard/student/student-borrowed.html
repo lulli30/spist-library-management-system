@@ -15,6 +15,182 @@
         box-sizing: border-box;
       }
 
+      body {
+        background: url("/img/schoolppp.png") no-repeat center center fixed;
+        background-size: cover;
+        min-height: 100vh;
+        position: relative;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(76, 175, 80, 0.1);
+        z-index: 0;
+      }
+
+      .main-container {
+        display: flex;
+        min-height: 100vh;
+        position: relative;
+        z-index: 1;
+        padding: 20px;
+      }
+
+      .sidebar-container {
+        width: 250px;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 100;
+      }
+
+      .sidebar {
+        background: linear-gradient(
+          135deg,
+          rgba(76, 175, 80, 0.95),
+          rgba(56, 142, 60, 0.95)
+        );
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        backdrop-filter: blur(5px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .logo {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .logo img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+      }
+
+      .logo h3 {
+        color: white;
+        font-size: 1.2em;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .admin-profile {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .avatar {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .avatar .material-symbols-outlined {
+        font-size: 24px;
+        color: white;
+      }
+
+      .user-details {
+        flex: 1;
+      }
+
+      .user-details h4 {
+        color: white;
+        font-size: 1em;
+        margin: 0 0 5px 0;
+        font-weight: 500;
+      }
+
+      .user-details p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85em;
+        margin: 0;
+      }
+
+      .nav {
+        flex: 1;
+        padding: 20px 10px;
+      }
+
+      .nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .nav ul li {
+        margin-bottom: 5px;
+      }
+
+      .nav ul li a {
+        color: white;
+        text-decoration: none;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 0.95em;
+      }
+
+      .nav ul li a span:last-child {
+        font-weight: 400;
+      }
+
+      .nav ul li a:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(5px);
+      }
+
+      .nav ul li.active a {
+        background: rgba(255, 255, 255, 0.2);
+        font-weight: 500;
+      }
+
+      .nav .material-symbols-outlined {
+        font-size: 20px;
+        opacity: 0.9;
+      }
+
+      /* Adjust main container margin */
+      .container {
+        margin-left: 270px;
+        flex: 1;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        max-width: 1400px;
+      }
+
+      @media (min-width: 1600px) {
+        .container {
+          margin: 0 auto;
+          margin-left: 270px;
+        }
+      }
+
       /* Additional borrowed books page styles */
       .status-filter {
         display: flex;
@@ -211,20 +387,21 @@
       <!-- Sidebar -->
       <aside class="sidebar-container">
         <div class="sidebar">
+          <div class="logo">
+            <img src="/img/school-logo-large.png" alt="SPIST Logo" />
+            <h3>SPIST Library</h3>
+          </div>
+
           <div class="admin-profile">
-            <div class="pin">
-              <div class="pcontainer">
+            <div class="profile-info">
+              <div class="avatar">
                 <span class="material-symbols-outlined">person</span>
               </div>
-              <div class="usrnm">
-                <p id="userName">Maria Garcia</p>
+              <div class="user-details">
+                <h4 id="userName">Maria Garcia</h4>
+                <p id="userID">STD-2023-001</p>
               </div>
             </div>
-            <div class="pin">
-              <div class="emaildiv"></div>
-            </div>
-            <div class="white"></div>
-            <p id="userID">STD-2023-001</p>
           </div>
 
           <nav class="nav">
@@ -232,13 +409,13 @@
               <li>
                 <a href="/student-dashboard">
                   <span class="material-symbols-outlined">dashboard</span>
-                  Dashboard
+                  <span>Dashboard</span>
                 </a>
               </li>
               <li>
                 <a href="/student-books">
                   <span class="material-symbols-outlined">book</span>
-                  Browse Books
+                  <span>Browse Books</span>
                 </a>
               </li>
               <li class="active">
@@ -246,19 +423,19 @@
                   <span class="material-symbols-outlined"
                     >assignment_returned</span
                   >
-                  Borrowed Books
+                  <span>Borrowed Books</span>
                 </a>
               </li>
               <li>
                 <a href="/student-profile">
                   <span class="material-symbols-outlined">person</span>
-                  My Profile
+                  <span>My Profile</span>
                 </a>
               </li>
               <li>
                 <a href="#" onclick="showLogoutModal()">
                   <span class="material-symbols-outlined">logout</span>
-                  Logout
+                  <span>Logout</span>
                 </a>
               </li>
             </ul>

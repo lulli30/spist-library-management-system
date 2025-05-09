@@ -34,7 +34,10 @@ router.get("/:studentId", (req, res) => {
     const response = {
       total_borrowed: borrowings.length,
       books: borrowings.map((b) => ({
+        borrow_id: b.borrow_id,
         title: b.title,
+        author: b.author,
+        borrow_date: b.borrow_date,
         due_date: b.due_date,
         status: b.borrow_status,
       })),
