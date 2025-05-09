@@ -351,11 +351,31 @@
       }
 
       .modal-content {
-        background: white;
+        background: linear-gradient(
+          135deg,
+          rgba(76, 175, 80, 0.95),
+          rgba(56, 142, 60, 0.95)
+        );
         padding: 20px;
         border-radius: 10px;
         width: 90%;
         max-width: 400px;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .modal-content h2 {
+        color: white;
+        margin-bottom: 15px;
+      }
+
+      .modal-content p {
+        color: white;
+        margin-bottom: 20px;
+      }
+
+      .modal-content label {
+        color: white !important;
       }
 
       .form-actions {
@@ -366,27 +386,27 @@
       }
 
       .submit-btn,
-      .cancel-btn {
+      .cancel-btn,
+      .logout-confirm-btn {
         padding: 8px 16px;
         border-radius: 5px;
         border: none;
         cursor: pointer;
         transition: all 0.3s ease;
-      }
-
-      .submit-btn {
-        background-color: #4caf50;
-        color: white;
-      }
-
-      .cancel-btn {
-        background-color: #f44336;
-        color: white;
+        background-color: white;
+        color: #4caf50;
+        font-weight: 500;
       }
 
       .submit-btn:hover,
-      .cancel-btn:hover {
+      .cancel-btn:hover,
+      .logout-confirm-btn:hover {
         transform: translateY(-1px);
+        background-color: rgba(255, 255, 255, 0.9);
+      }
+
+      .cancel-btn {
+        background-color: rgba(255, 255, 255, 0.8);
       }
 
       @media (min-width: 1600px) {
@@ -501,6 +521,16 @@
       // Function to show book borrow modal
       function showBorrowModal(bookId) {
         sessionStorage.setItem("currentBorrowBookId", bookId);
+        // Set minimum date to today and maximum date to 30 days from now
+        const today = new Date();
+        const maxDate = new Date();
+        maxDate.setDate(today.getDate() + 30);
+
+        const returnDateInput = document.getElementById("returnDate");
+        returnDateInput.min = today.toISOString().split("T")[0];
+        returnDateInput.max = maxDate.toISOString().split("T")[0];
+        returnDateInput.value = maxDate.toISOString().split("T")[0]; // Default to max date
+
         document.getElementById("modal-user").style.display = "flex";
       }
 
@@ -604,21 +634,39 @@
         }
       }
 
-      // Function to fetch and display recent books
-      async function updateRecentBooks() {
+      // Function to fetch and display recommended books
+      async function updateRecommendedBooks() {
         try {
-          const response = await fetch("/api/students/books/recent");
+          const studentId = sessionStorage.getItem("studentId");
+          console.log("Fetching recommendations for student ID:", studentId); // Debug log
+
+          if (!studentId) {
+            console.error("No student ID found in session");
+            return;
+          }
+
+          const response = await fetch(
+            `/api/students/books/recommended/${studentId}`
+          );
+          console.log("Recommendation API response status:", response.status); // Debug log
+
           if (!response.ok) {
-            throw new Error(`Failed to fetch recent books: ${response.status}`);
+            throw new Error(
+              `Failed to fetch recommended books: ${response.status}`
+            );
           }
 
           const books = await response.json();
-          const tableBody = document.getElementById("recentBooksTableBody");
+          console.log("Received recommendations:", books); // Debug log
 
-          if (books.length === 0) {
+          const tableBody = document.getElementById(
+            "recommendedBooksTableBody"
+          );
+
+          if (!books || books.length === 0) {
             tableBody.innerHTML = `
               <tr>
-                <td colspan="6" class="text-center">No books available</td>
+                <td colspan="5" class="text-center">No book recommendations available yet. Try borrowing some books first!</td>
               </tr>
             `;
             return;
@@ -631,7 +679,6 @@
               <td>${book.title}</td>
               <td>${book.author}</td>
               <td>${book.category}</td>
-              <td>${formatDate(book.added_date)}</td>
               <td>
                 <span class="status-pill ${book.current_status.toLowerCase()}">
                   ${
@@ -654,20 +701,13 @@
             )
             .join("");
         } catch (error) {
-          console.error("Error updating recent books:", error);
-          document.getElementById("recentBooksTableBody").innerHTML = `
+          console.error("Error updating recommended books:", error);
+          document.getElementById("recommendedBooksTableBody").innerHTML = `
             <tr>
-              <td colspan="6" class="text-center">Error loading recent books</td>
+              <td colspan="5" class="text-center">Error loading recommended books</td>
             </tr>
           `;
         }
-      }
-
-      // Function to close modal
-      function closeModal() {
-        document.getElementById("modal-user").style.display = "none";
-        // Clear any stored IDs
-        sessionStorage.removeItem("currentBorrowBookId");
       }
 
       // Function to handle book borrowing
@@ -675,9 +715,21 @@
         try {
           const bookId = sessionStorage.getItem("currentBorrowBookId");
           const studentId = sessionStorage.getItem("studentId");
+          const returnDate = document.getElementById("returnDate").value;
 
           if (!bookId || !studentId) {
             alert("Missing book or student information");
+            return;
+          }
+
+          if (!returnDate) {
+            alert("Please select a return date");
+            return;
+          }
+
+          // Check if return date is in the past
+          if (new Date(returnDate) < new Date()) {
+            alert("Return date cannot be in the past");
             return;
           }
 
@@ -689,6 +741,7 @@
             body: JSON.stringify({
               bookId: bookId,
               studentId: studentId,
+              returnDate: returnDate,
             }),
           });
 
@@ -699,7 +752,7 @@
             // Refresh the dashboard data
             updateDashboardStats();
             updateBorrowedBooks();
-            updateRecentBooks();
+            updateRecommendedBooks();
           } else {
             alert(result.message || "Failed to borrow book");
           }
@@ -711,16 +764,23 @@
         }
       }
 
+      // Function to close modal
+      function closeModal() {
+        document.getElementById("modal-user").style.display = "none";
+        // Clear any stored IDs
+        sessionStorage.removeItem("currentBorrowBookId");
+      }
+
       // Call the functions when the page loads
       document.addEventListener("DOMContentLoaded", () => {
         updateDashboardStats();
         updateBorrowedBooks();
-        updateRecentBooks();
+        updateRecommendedBooks();
         // Refresh data every 5 minutes
         setInterval(() => {
           updateDashboardStats();
           updateBorrowedBooks();
-          updateRecentBooks();
+          updateRecommendedBooks();
         }, 300000);
       });
     </script>
@@ -847,10 +907,10 @@
             </table>
           </div>
 
-          <!-- Recently Added Books -->
+          <!-- Recommended Books -->
           <div class="section-heading">
-            <span class="material-symbols-outlined">new_releases</span>
-            <h3>Recently Added Books</h3>
+            <span class="material-symbols-outlined">recommend</span>
+            <h3>Recommended Books</h3>
           </div>
 
           <div class="table-wrapper">
@@ -860,15 +920,14 @@
                   <th>Book Title</th>
                   <th>Author</th>
                   <th>Category</th>
-                  <th>Added Date</th>
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
-              <tbody id="recentBooksTableBody">
+              <tbody id="recommendedBooksTableBody">
                 <tr>
-                  <td colspan="6" class="text-center">
-                    Loading recent books...
+                  <td colspan="5" class="text-center">
+                    Loading recommended books...
                   </td>
                 </tr>
               </tbody>
@@ -885,6 +944,24 @@
         <p id="borrowConfirmMessage">
           Are you sure you want to borrow this book?
         </p>
+        <div class="form-group" style="margin-bottom: 15px">
+          <label
+            for="returnDate"
+            style="display: block; margin-bottom: 5px; color: black"
+            >Select Return Date:</label
+          >
+          <input
+            type="date"
+            id="returnDate"
+            style="
+              width: 100%;
+              padding: 8px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+            required
+          />
+        </div>
         <div class="form-actions">
           <button type="button" class="submit-btn" onclick="handleBorrow()">
             Confirm

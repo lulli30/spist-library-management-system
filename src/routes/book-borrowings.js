@@ -20,7 +20,6 @@ router.get("/:studentId", (req, res) => {
     JOIN books b ON bb.book_id = b.id
     WHERE bb.student_id = ?
       AND (bb.status = 'borrowed' OR bb.status = 'overdue')
-      AND bb.return_date IS NULL
     ORDER BY bb.due_date ASC
   `;
 

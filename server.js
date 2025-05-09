@@ -5,6 +5,7 @@ const authRoutes = require("./src/routes/auth");
 const adminRoutes = require("./src/routes/admin");
 const studentRoutes = require("./src/routes/students");
 const bookBorrowingRoutes = require("./src/routes/book-borrowings");
+const booksRoutes = require("./src/routes/books");
 const PORT = process.env.PORT || 3000;
 
 // Initialize Express app
@@ -19,6 +20,7 @@ app.use("/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/book-borrowings", bookBorrowingRoutes);
+app.use("/api/books", booksRoutes);
 
 // API Error Handler
 app.use("/api", (err, req, res, next) => {
