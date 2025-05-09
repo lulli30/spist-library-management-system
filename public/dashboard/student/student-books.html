@@ -521,7 +521,7 @@
             <td>
               ${
                 book.status.toLowerCase() === "available"
-                  ? `<button class="book-borrow-btn" onclick="showBookuser('${book.id}')">Borrow</button>`
+                  ? `<button class="book-borrow-btn" onclick="showBorrowModal('${book.id}')">Borrow</button>`
                   : '<button class="book-borrow-btn" disabled>Not Available</button>'
               }
             </td>
@@ -554,7 +554,7 @@
       });
 
       // Function to show book borrow modal
-      function showBookuser(bookId) {
+      function showBorrowModal(bookId) {
         sessionStorage.setItem("currentBorrowBookId", bookId);
         // Set minimum date to today and maximum date to 30 days from now
         const today = new Date();
